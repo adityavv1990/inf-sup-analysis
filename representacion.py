@@ -5,30 +5,56 @@ Created on Wed Oct  9 21:05:16 2024
 @author: Aditya Vasudevan, modified code of Ignacio Calvo Ramón-Borja
 """
  
-# Este archivo es para ejecutar la función y obtener las gráficas
+# This code analysis the stability of a mixed finite element formulation
+# it takes as input, matrices A, B, C that are the matrices from the stifness:
+#
+#           | A     B.T |
+#     K  =  |           |
+#           | B      C  |    
+#
+#
+#  where A is an n by n matrix
+#        B is m by n
+#        C is m by m
+
+#  The code also reads the matrices H and L that are gram Matrices, where
+#        H is n by n     (gram matrix corresponding to the primal variable)
+#        L is m by m     (gram matrix corresponding to the dual variable) 
+
+#  There are three important functions in the file inf_sup.py
+#       - mixed_infsup: that computes the eigenvalues of the matrix B Hinv B.T
+#       - mixed_infsup_C: that computes the eigenvalues of the matrix B.T Cinv B
+#       - primal_infsup: that computes the eigenvalues of the matrix A
+#       - primal_infsup_onKerB: that computes the eigenvalues of the matrix A but only for vectors in the kernel of B
+
 
 import sys
 import os
 import numpy as np
 import time
 
+from lector_casos import lector_parametros, lector_unknowns, lector_matrices
+from inf_sup import mixed_infsup, primal_infsup, mixed_infsup_C, primal_infsup_onKerB
+import matplotlib.pyplot as plt
+import subprocess
+
+
 start_time = time.time()
 ruta_principal = '/home/aditya/Documents/locking/simulations/clamped-beam/infsup-analysis'
 # Carpeta en la que estan las funciones que voy a utilizar
 sys.path.append(os.path.join(ruta_principal))
 
-from lector_casos import lector_parametros, lector_unknowns, lector_matrices
-from inf_sup import mixed_infsup, primal_infsup, mixed_infsup_C, primal_infsup_onKerB
-import matplotlib.pyplot as plt
 
 # Ruta donde se encuentran los problemas varios
-ruta = os.path.join(ruta_principal, "mixed-p1p0-KPP-dependent-on-h")
+ruta = os.path.join(ruta_principal, "mixed-p1p1c")
+
+print("Reading from the directory:           ", ruta)
 
 # Lectura de los datos y parámetros
 casos = lector_parametros('clamped.txt', ruta_archivo = ruta)
 num_ecs = lector_unknowns(ruta_carpetas = ruta)
 
-print("Number of divisions: ", casos,)
+print("Number of divisions: ", casos)
 print("Number of equations: ", num_ecs)
 print("\n\n")
 
@@ -77,6 +103,7 @@ for eps in epsArray:
     for A, B, C, H, L in zip(matsA, matsB, matsC, matsH, matsL):
         print("----------------------------------------------------------")
         print("Solving the eigenvalues for N = ", casos[count],flush=True)
+        print("----------------------------------------------------------")
         print("\n\n")
         #beta.append(primal_infsup (M, H, eps))
         eigenValuesFromH = mixed_infsup(B ,H, L)
@@ -86,7 +113,6 @@ for eps in epsArray:
         betaMaxFromH.append(maxEigenValue)
         print("Maximum EigenValue from B Hinv B.T= ", maxEigenValue, flush=True)
         print("Minimum EigenValue from B Hinv B.T= ", minEigenValue, flush=True)
-        print("----------------------------------------------------------")
         print("\n\n")
         
 
@@ -97,7 +123,6 @@ for eps in epsArray:
         betaMaxFromC.append(maxEigenValue)
         print("Maximum EigenValue from B.T Cinv B = ", maxEigenValue, flush=True)
         print("Minimum EigenValue from B.T Cinv B = ", minEigenValue, flush=True)
-        print("----------------------------------------------------------")
         print("\n\n")
 
         #eigenValues = primal_infsup(M, H, eps)
@@ -110,7 +135,6 @@ for eps in epsArray:
         alphaMaxFromA.append(maxEigenValue)
         print("Maximum EigenValue from A = ", maxEigenValue, flush=True)
         print("Minimum EigenValue from A = ", minEigenValue, flush=True)
-        print("----------------------------------------------------------")
         print("\n\n")
 
         eigenValuesFromAonkerB = primal_infsup_onKerB(A, H, B)
@@ -121,10 +145,9 @@ for eps in epsArray:
         alphaMaxFromAonkerB.append(maxEigenValue)
         print("Maximum EigenValue from A on kerB = ", maxEigenValue, flush=True)
         print("Minimum EigenValue from A on kerB = ", minEigenValue, flush=True)
-        print("----------------------------------------------------------")
         print("\n\n")
 
-        
+
         count+=1
 
     
@@ -149,3 +172,6 @@ for eps in epsArray:
     print(f"Total time of execution: {elapsed_time:.6f} seconds", flush=True)
     print("----------------------------------------------------------")
     print("\n\n")
+
+    command = "cp output.txt " + ruta
+    result = subprocess.run(command, shell=True, text=True, capture_output=True)

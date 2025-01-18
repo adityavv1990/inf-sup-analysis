@@ -12,7 +12,6 @@ from scipy.linalg import sqrtm, matrix_balance
 from scipy.sparse import csc_matrix
 import time, math, sys
 from scipy.linalg import eigh, inv
-from cvxpy.atoms.affine.wraps import psd_wrap
 
 
 
@@ -108,12 +107,27 @@ def mixed_infsup(matB, matH, matL):
         ('Error de convergencia').
 
     """
+
+    print("Computing the eigenvalues of the matrix B Hinv B.T x = \lambda L x...", flush=True)
+
+    start_time = time.time()
     
     matB = matB.astype(np.float64)
     matH = matH.astype(np.float64)
     matL = matL.astype(np.float64)
 
     m,n = matB.shape
+    print("   The shape of B = ", matB.shape, flush=True)
+    print("   The shape of H = ", matH.shape, flush=True)
+    print("   The shape of L = ", matL.shape, flush=True)
+
+    # null space of the B.T-matrix
+    print("   Performing SVD of B.T to evaluate ker(B.T)", flush=True)
+    u , s, vt = svds(matB.T, k = m-1, tol = 1e-5, which = 'SM')
+    dimKernel = (abs(s) < 1e-5).sum()
+    print("   The eigenvalues of B.T = ", s, flush=True)
+    print("   The number of zero eigenvalues of B.T = ", dimKernel, flush=True)
+    print("   The dimension of the kernel of B.T = ", dimKernel, flush=True)
 
     def operador_BHinvBt(B, H):
       
@@ -145,18 +159,22 @@ def mixed_infsup(matB, matH, matL):
         eigValues = np.append(eigValues, eigValueMax)
 
         rank = (abs(eigValues) > 1e-5).sum()
-
-        print("Eigenvalues = ", eigValues, flush=True)
-        print("MAX Eigenvalue = ", eigValueMax, flush=True)
-        print("shape of eigenvalues = ", eigValues.shape, flush=True)
-        print("m = ", m, flush=True)
+        
+        print("Eigenvalues of B Hinv B.T= ", eigValues, flush=True)
+        print("Number of zero eigenvalues of B Hinv B.T = ", m-rank, flush=True)
         print("rank of the matrix B H^-1 B.T= ", rank, flush=True)
 
-        mineigenValue = eigValues[m-rank]
+        mineigenValue = eigValues[dimKernel] # the first non-zero eigenvalue
         maxeigenValue = eigValues[-1]
         eigenValues = [mineigenValue, maxeigenValue]
-        return eigenValues 
-        
+
+        end_time = time.time()
+        elapsed_time = end_time - start_time
+        print(f"Elapsed time in computing eigenvalues of B Hinv B.T {elapsed_time:.6f} seconds", flush=True)
+ 
+        return eigenValues
+    
+
     except ArpackNoConvergence:
         
         return "Error de convergencia"
@@ -190,12 +208,36 @@ def mixed_infsup_C(matB, matH, matC):
         ('Error de convergencia').
 
     """
+
+    print("Computing the eigenvalues of the matrix B.T Cinv B x = \lambda H x ...", flush=True)
+
+    start_time = time.time()
     
     matB = matB.astype(np.float64)
     matH = matH.astype(np.float64)
     matC = matC.astype(np.float64)
 
+    scale_C = norm(matC)
+    matC = matC/scale_C
     m,n = matB.shape
+    print("The shape of B = ", matB.shape, flush=True)
+    print("The shape of H = ", matH.shape, flush=True)
+    print("The shape of C = ", matC.shape, flush=True)
+
+    scale_C = norm(matC)
+    matC = matC/scale_C
+
+    print("scaling of matrix C = ", scale_C)
+
+    u , s, vt = svds(matC, k = m-1, tol = 1e-5, which = 'SM')
+    umax , smax, vtmax = svds(matC, k = 1, tol = 1e-5, which = 'LM')
+
+    s = np.append(s, smax)
+    dimKernel = (abs(s) < 1e-5).sum()
+    print("   The eigenvalues of C = ", s, flush=True)
+    print("   The number of zero eigenvalues of C = ", dimKernel, flush=True)
+    print("   The dimension of the kernel of C = ", dimKernel, flush=True)
+    
 
     def operador_BtCinvB(B, C):
       
@@ -224,27 +266,29 @@ def mixed_infsup_C(matB, matH, matC):
         eigValues, _ = eigsh(A = operator, k = n-1, M = matH, which = 'SA', tol = 1e-5)
         eigValuesMax, _ = eigsh(A = operator, k = 1, M = matH, which = 'LA', tol = 1e-5)
 
+        eigValues = eigValues * scale_C
+
         eigValues = np.append(eigValues, eigValuesMax)
 
-        rank = (abs(eigValues) > 1e-1).sum()
+        rank = (abs(eigValues) > 1e-10).sum()
 
-        print("Eigenvalues = ", eigValues, flush=True)
-        print("shape of eigenvalues = ", eigValues.shape, flush=True)
-        print("n = ", n, flush=True)
-        print("rank of the matrix B.T C^-1 B= ", rank, flush=True)
+        print("Eigenvalues of B.T Cinv B = ", eigValues, flush=True)
+        print("rank of the matrix B.T Cinv B= ", rank, flush=True)
+        print("Number of zero eigenvalues of B.T Cinv B = ", n-rank, flush=True)
 
         mineigenValue = eigValues[n-rank]
         maxeigenValue = eigValues[-1]
         eigenValues = [mineigenValue, maxeigenValue]
+
+        end_time = time.time()
+        elapsed_time = end_time - start_time
+        print(f"Elapsed time in computing eigenvalues of B Cinv B.T {elapsed_time:.6f} seconds", flush=True)
+
         return eigenValues 
         
     except ArpackNoConvergence:
         
         return "Error de convergencia"
-
-
-
-
 
 
 
@@ -278,11 +322,17 @@ def primal_infsup(matM, matH, eps = 0.0):
         ('Error de convergencia').
 
     """
+
+    print("Computing the eigenvalues of the matrix A x = \lambda H x ...", flush=True)
+    
+    start_time = time.time()
     
     matM = matM.astype(np.float64)
     matH = matH.astype(np.float64)
 
-    N, N = matM.shape
+    n, n = matM.shape
+    print("The shape of A = ", matM.shape, flush=True)
+    print("The shape of H = ", matH.shape, flush=True)
 
     ## We will verify if H and M are positive definite or not
     checkpositiveDefiniteness(matM, matH)
@@ -292,99 +342,47 @@ def primal_infsup(matM, matH, eps = 0.0):
     scale_M = norm(matM)
     scale_H = norm(matH)
 
-    print("scaling of matrix M = ", scale_M)
+    print("scaling of matrix A = ", scale_M)
     print("scaling of matrix H = ", scale_H)
 
     matM = matM/scale_M
     matH = matH/scale_H
-
-    # convert H from sparse to dense and take square root and convert it back
-    #Hdense = matH.toarray()
-    
-    
-    #start_time = time.time()
-    #sqrtHdense = sqrtm(Hdense)
-    #end_time = time.time()
-    #elapsed_time = end_time-start_time
-    #print(f"Elapsed time in calculating sqrt(H): {elapsed_time:.6f} seconds", flush=True)
-
-
-    #sqrtH = csc_matrix(sqrtHdense)
-
-
-    #operator = operador_HnegHalf_M_HnegHalf(sqrtH, matM)
     
     allValues = np.ndarray([], dtype=float)
     eigenValues = []
-
-    # try:
-    #     # Calculamos el menor autovalor
-    #     start_time = time.time()
-    #     print("Evaluating the eigenvalue using linear operator-------------->",flush=True)        
-    #     #MtM = matM.T @ matM
-    #     mineig1, _ = eigsh(A = operator, k = 1, which = 'SM', tol = 1e-5)
-    #     print("Minimum-eigenvalue from operator = ", mineig1, flush=True)
-    #     end_time = time.time()
-    #     elapsed_time = end_time - start_time
-    #     print(f"Elapsed time in linear operator block: {elapsed_time:.6f} seconds", flush=True)
-        
-    # except ArpackNoConvergence:    
-    #     print("Error de convergencia")
-    #     mineig1 = np.array([0.0])
     
     try: 
-        start_time = time.time()
-        print("Evaluating the eigenvalue direct matrix evaluation-------------->", flush=True)        
-        #Hminushalf = inv(sqrtHdense)
-        #HminushalfSparse = csc_matrix(Hminushalf)        
-        #Mtilde = HminushalfSparse @ matM @ HminushalfSparse
-        #MtildeDense = Mtilde.toarray()
-        #MtildeBalanced, permscale = matrix_balance(MtildeDense)
-        #print(permscale, flush=True)
-        #MtildeBalanceSparse = csc_matrix(MtildeBalanced)
-        #mineig2, _ = eigsh(MtildeBalanceSparse, k = 1, which = 'SM', tol = 1e-3, maxiter=N)
+
         Mdense = matM.toarray()
         Hdense = matH.toarray()
-        #mineig2, _ = eigsh(A =  matM, k = 1, M = matH, which = 'SM', tol = 1e-3, maxiter=N*200)
-        #cond_number_M = np.linalg.cond(Mdense)
-        #cond_number_H = np.linalg.cond(Hdense)
-
+        
         regularized_M = Mdense + eps * np.eye(Mdense.shape[0])
         regularized_H = Hdense + eps * np.eye(Hdense.shape[0])
 
-        #rankM = np.linalg.matrix_rank(regularized_M)
-        #rankH = np.linalg.matrix_rank(regularized_H)
-        #print("shape of matrix M = ", regularized_M.shape, flush=True)
-        #print("Rank of regularized matrix M = ", rankM, flush=True)
-        #print("shape of regularized matrix H = ", regularized_H.shape, flush=True)
-        #print("Rank of regularized matrix H = ", rankH, flush=True) 
-
-
+        
         regularized_M_sparse = csc_matrix(regularized_M)
         regularized_H_sparse = csc_matrix(regularized_H)
 
-        #mineig2 = eigh(regularized_M, regularized_H, eigvals_only=True, subset_by_index = [0,0], driver='gvx')
-        allValues, _ = eigsh(A =  regularized_M_sparse, k = N-1, M = regularized_H_sparse, which = 'SA', tol = 1e-3, maxiter=N*200)
-        eigMaxValue, _ = eigsh(A =  regularized_M_sparse, k = 1, M = regularized_H_sparse, which = 'LA', tol = 1e-3, maxiter=N*200)
+
+        allValues, _ = eigsh(A =  regularized_M_sparse, k = n-1, M = regularized_H_sparse, which = 'SA', tol = 1e-5, maxiter=n*200)
+        eigMaxValue, _ = eigsh(A =  regularized_M_sparse, k = 1, M = regularized_H_sparse, which = 'LA', tol = 1e-5, maxiter=n*200)
         allValues = np.append(allValues, eigMaxValue)
 
         allValues = allValues * scale_M/scale_H
 
-        rankM = (abs(allValues) > 1e-3).sum()
+        rankM = (abs(allValues) > 1e-5).sum()
 
-        print("Eigenvalues = ", allValues, flush=True)
-        print("shape of eigenvalues = ", allValues.shape, flush=True)
-        print("n = ", N, flush=True)
+        print("Eigenvalues of A = ", allValues, flush=True)
         print("rank of the matrix A = ", rankM, flush=True)
+        print("Number of zero eigenvalues of A = ", n-rankM, flush=True)
 
-
-        minEigenValue = allValues[N-rankM]
+        minEigenValue = allValues[n-rankM]
         maxEigenValue = allValues[-1]
         eigenValues = [minEigenValue, maxEigenValue]
 
         end_time = time.time()
         elapsed_time = end_time - start_time
-        print(f"Elapsed time in balanced matrix block: {elapsed_time:.6f} seconds", flush=True)
+        print(f"Elapsed time in computing eigenvalues of A: {elapsed_time:.6f} seconds", flush=True)
 
     except ArpackNoConvergence:
         print("Error de convergencia")
@@ -424,127 +422,81 @@ def primal_infsup_onKerB(matM, matH, matB, eps = 0.0):
         ('Error de convergencia').
 
     """
+
+    print("Computing the eigenvalues of the matrix P * A x = \lambda H x ...", flush=True)
+    
+    start_time = time.time()
     
     matM = matM.astype(np.float64)
     matH = matH.astype(np.float64)
     matB = matB.astype(np.float64)
 
     n, n = matM.shape
+    m , n = matB.shape
+
+    print("The shape of M = ", matM.shape, flush=True)
+    print("The shape of H = ", matH.shape, flush=True)
+    print("The shape of B = ", matB.shape, flush=True)
 
     ## We will verify if H and M are positive definite or not
     checkpositiveDefiniteness(matM, matH)
     matM = symmetrizeMatrix(matM)
     matH = symmetrizeMatrix(matH)
-    
-    ## We will next evaluate the kernel of the B matrix
-    m , n = matB.shape
-    print("The shape of B = ", matB.shape, flush=True)
 
+    scale_M = norm(matM)
+    scale_H = norm(matH)
+
+    print("scaling of matrix M = ", scale_M)
+    print("scaling of matrix H = ", scale_H)
+
+    matM = matM/scale_M
+    matH = matH/scale_H
+
+    ## We will next evaluate the kernel of the B matrix
 
     print("Calculating the null space of B", flush=True)
     u , s, vt = svds(matB, k = m-1, tol = 1e-5, which = 'SM')
-    
-    rankB = (s > 1e-5).sum()
-    print("The rank of B = ", rankB, flush=True)
+
     nullspaceindices = np.where(s < 1e-5)
     nullSpace = vt[nullspaceindices].T
 
-    print("The null space of B = ", nullSpace, flush=True)
+    print("The eigenvalues of B = ", s, flush=True)
     print("The shape of the null space of B = ", nullSpace.shape, flush=True)
 
     # Projection matrix
     temp = nullSpace.T @ nullSpace
     tempInv = np.linalg.inv(temp)
-    print("tempInv = ", tempInv, flush=True)
     P = nullSpace @ tempInv @ nullSpace.T
-    print("P = ", P, flush=True)
 
-    
-    # convert H from sparse to dense and take square root and convert it back
-    #Hdense = matH.toarray()
-    
-    
-    #start_time = time.time()
-    #sqrtHdense = sqrtm(Hdense)
-    #end_time = time.time()
-    #elapsed_time = end_time-start_time
-    #print(f"Elapsed time in calculating sqrt(H): {elapsed_time:.6f} seconds", flush=True)
-
-
-    #sqrtH = csc_matrix(sqrtHdense)
-
-
-    #operator = operador_HnegHalf_M_HnegHalf(sqrtH, matM)
-    
+        
     allValues = np.ndarray([], dtype=float)
     eigenValues = []
 
-    # try:
-    #     # Calculamos el menor autovalor
-    #     start_time = time.time()
-    #     print("Evaluating the eigenvalue using linear operator-------------->",flush=True)        
-    #     #MtM = matM.T @ matM
-    #     mineig1, _ = eigsh(A = operator, k = 1, which = 'SM', tol = 1e-5)
-    #     print("Minimum-eigenvalue from operator = ", mineig1, flush=True)
-    #     end_time = time.time()
-    #     elapsed_time = end_time - start_time
-    #     print(f"Elapsed time in linear operator block: {elapsed_time:.6f} seconds", flush=True)
-        
-    # except ArpackNoConvergence:    
-    #     print("Error de convergencia")
-    #     mineig1 = np.array([0.0])
-    
     try: 
-        start_time = time.time()
-        print("Evaluating the eigenvalue direct matrix evaluation-------------->", flush=True)        
-        #Hminushalf = inv(sqrtHdense)
-        #HminushalfSparse = csc_matrix(Hminushalf)        
-        #Mtilde = HminushalfSparse @ matM @ HminushalfSparse
-        #MtildeDense = Mtilde.toarray()
-        #MtildeBalanced, permscale = matrix_balance(MtildeDense)
-        #print(permscale, flush=True)
-        #MtildeBalanceSparse = csc_matrix(MtildeBalanced)
-        #mineig2, _ = eigsh(MtildeBalanceSparse, k = 1, which = 'SM', tol = 1e-3, maxiter=N)
+
         Mdense = matM.toarray()
         Hdense = matH.toarray()
 
-        PMP = P @ Mdense @ P
-        PHP = P @ Hdense @ P
-
-        print("PMP = ", PMP, flush=True)
-        print("PHP = ", PHP, flush=True)
-
-        #mineig2, _ = eigsh(A =  matM, k = 1, M = matH, which = 'SM', tol = 1e-3, maxiter=N*200)
-        #cond_number_M = np.linalg.cond(Mdense)
-        #cond_number_H = np.linalg.cond(Hdense)
-
-
-        #rankM = np.linalg.matrix_rank(regularized_M)
-        #rankH = np.linalg.matrix_rank(regularized_H)
-        #print("shape of matrix M = ", regularized_M.shape, flush=True)
-        #print("Rank of regularized matrix M = ", rankM, flush=True)
-        #print("shape of regularized matrix H = ", regularized_H.shape, flush=True)
-        #print("Rank of regularized matrix H = ", rankH, flush=True) 
-
+        PMP = P @ Mdense
+        PHP =  Hdense 
 
         PMP_sparse = csc_matrix(PMP)
         PHP_sparse = csc_matrix(PHP)
 
-        PMP_sparse = psd_wrap(PMP_sparse)
-        PHP_sparse = psd_wrap(PHP_sparse)
-
         #mineig2 = eigh(regularized_M, regularized_H, eigvals_only=True, subset_by_index = [0,0], driver='gvx')
-        allValues, _ = eigsh(A =  PMP_sparse, k = n-1, M = PHP_sparse, which = 'SA', tol = 1e-3, maxiter=n*200)
-        eigMaxValue, _ = eigsh(A =  PMP_sparse, k = 1, M = PHP_sparse, which = 'LA', tol = 1e-3, maxiter=n*200)
+        allValues, _ = eigsh(A =  PMP_sparse, k = n-1, ncv = n * 100, M = PHP_sparse, which = 'SA', tol = 1e-5, maxiter=n*200)
+        eigMaxValue, _ = eigsh(A =  PMP_sparse, k = 1, ncv = n * 100, M = PHP_sparse, which = 'LA', tol = 1e-5, maxiter=n*200)
+
         allValues = np.append(allValues, eigMaxValue)
 
-        rankM = (abs(allValues) > 1e-3).sum()
+        allValues = allValues * scale_M/scale_H
 
-        print("Eigenvalues = ", allValues, flush=True)
-        print("shape of eigenvalues = ", allValues.shape, flush=True)
-        print("n = ", n, flush=True)
-        print("rank of the matrix A = ", rankM, flush=True)
+        rankM = (abs(allValues) > 1e-2).sum()
 
+
+        print("Eigenvalues of P * A * X= \lambda H * x ", allValues, flush=True)
+        print("rank of the matrix P * A = ", rankM, flush=True)
+        print("number of zero eigenvalues of P * A = ", n - rankM, flush=True)
 
         minEigenValue = allValues[n-rankM]
         maxEigenValue = allValues[-1]
@@ -552,7 +504,7 @@ def primal_infsup_onKerB(matM, matH, matB, eps = 0.0):
 
         end_time = time.time()
         elapsed_time = end_time - start_time
-        print(f"Elapsed time in balanced matrix block: {elapsed_time:.6f} seconds", flush=True)
+        print(f"Elapsed time in computing eigenvalues of P * A : {elapsed_time:.6f} seconds", flush=True)
 
     except ArpackNoConvergence:
         print("Error de convergencia")
