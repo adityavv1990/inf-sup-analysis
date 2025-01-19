@@ -322,7 +322,7 @@ def mixed_infsup_C2(matB, matH, matC):
 
     """
 
-    print("Computing the eigenvalues of the matrix B Hinv B.T = \lambda H x ...", flush=True)
+    print("Computing the eigenvalues of the matrix B Hinv B.T = \lambda C x (continous pressure formu)...", flush=True)
 
     start_time = time.time()
     
@@ -352,7 +352,7 @@ def mixed_infsup_C2(matB, matH, matC):
     print("   The dimension of the kernel of C = ", dimKernel, flush=True)
     
 
-    def operador_BHCinvBt(B, H):
+    def operador_BHinvBt(B, H):
       
         # Obtenemos los tamaños de las matrices B y C
         m, n = B.shape
@@ -372,7 +372,7 @@ def mixed_infsup_C2(matB, matH, matC):
     
         return LinearOperator(shape, matvec=matvec)
     
-    operator = operador_BHCinvBt(matB, matH)
+    operator = operador_BHinvBt(matB, matH)
     
     try:
         # Calculamos el menor autovalor
@@ -385,8 +385,8 @@ def mixed_infsup_C2(matB, matH, matC):
 
         rank = (abs(eigValues) > 1e-10).sum()
 
-        print("Eigenvalues of B Hinv B.T = ", eigValues, flush=True)
-        print("rank of the matrix B Hinv B.T= ", rank, flush=True)
+        print("Eigenvalues of B Hinv B.T = \lambda C x", eigValues, flush=True)
+        print("rank of the matrix B Hinv B.T = ", rank, flush=True)
         print("Number of zero eigenvalues of B Hinv B.T = ", n-rank, flush=True)
 
         mineigenValue = eigValues[m-rank]
@@ -395,7 +395,7 @@ def mixed_infsup_C2(matB, matH, matC):
 
         end_time = time.time()
         elapsed_time = end_time - start_time
-        print(f"Elapsed time in computing eigenvalues of B.T Hinv B {elapsed_time:.6f} seconds", flush=True)
+        print(f"Elapsed time in computing eigenvalues of B.T Hinv B = \lambda C x {elapsed_time:.6f} seconds", flush=True)
 
         return eigenValues 
         

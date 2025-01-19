@@ -38,7 +38,7 @@ fig = plt.figure(figsize=(2.5, 2.5)); # Figure handle
 ax = plt.gca(); # Axes handle
 plt.rc('text', usetex=True)
 plt.xlabel(r'$\mathrm{h}$',fontsize=fntsize)
-plt.ylabel(r'$\lambda_{\mathrm{max}}$',fontsize=fntsize)
+plt.ylabel(r'$\sqrt{\lambda_{\mathrm{max}}}$',fontsize=fntsize)
 plt.xscale("log")
 plt.yscale("log")
 plt.title("EigenValues of B Hinv B.T")
@@ -54,7 +54,7 @@ fig = plt.figure(figsize=(2.5, 2.5)); # Figure handle
 ax = plt.gca(); # Axes handle
 plt.rc('text', usetex=True)
 plt.xlabel(r'$\mathrm{h}$',fontsize=fntsize)
-plt.ylabel(r'$\lambda_{\mathrm{min}}$',fontsize=fntsize)
+plt.ylabel(r'$\sqrt{\lambda_{\mathrm{min}}}$',fontsize=fntsize)
 plt.xscale("log")
 plt.yscale("log")
 plt.title("EigenValues of B Hinv B.T")
@@ -72,7 +72,7 @@ fig = plt.figure(figsize=(2.5, 2.5)); # Figure handle
 ax = plt.gca(); # Axes handle
 plt.rc('text', usetex=True)
 plt.xlabel(r'$\mathrm{h}$',fontsize=fntsize)
-plt.ylabel(r'$\frac{\lambda_{\mathrm{min}}}{\lambda_{\mathrm{min}}}$',fontsize=fntsize)
+plt.ylabel(r'$\sqrt{\frac{\lambda_{\mathrm{min}}}{\lambda_{\mathrm{min}}}}$',fontsize=fntsize)
 plt.xscale("log")
 plt.yscale("log")
 plt.title("Max/Min. EigenValue from B Hinv B.T")
@@ -90,7 +90,7 @@ fig = plt.figure(figsize=(2.5, 2.5)); # Figure handle
 ax = plt.gca(); # Axes handle
 plt.rc('text', usetex=True)
 plt.xlabel(r'$\mathrm{h}$',fontsize=fntsize)
-plt.ylabel(r'$\lambda_{\mathrm{max}}$',fontsize=fntsize)
+plt.ylabel(r'$\sqrt{\lambda_{\mathrm{max}}}$',fontsize=fntsize)
 plt.xscale("log")
 plt.yscale("log")
 plt.title("EigenValues of B.T Cinv B")
@@ -118,7 +118,7 @@ fig = plt.figure(figsize=(2.5, 2.5)); # Figure handle
 ax = plt.gca(); # Axes handle
 plt.rc('text', usetex=True)
 plt.xlabel(r'$\mathrm{h}$',fontsize=fntsize)
-plt.ylabel(r'$\lambda_{\mathrm{min}}$',fontsize=fntsize)
+plt.ylabel(r'$\sqrt{\lambda_{\mathrm{min}}}$',fontsize=fntsize)
 plt.xscale("log")
 plt.yscale("log")
 plt.title("EigenValues of B.T Cinv B")
@@ -145,7 +145,7 @@ fig = plt.figure(figsize=(2.5, 2.5)); # Figure handle
 ax = plt.gca(); # Axes handle
 plt.rc('text', usetex=True)
 plt.xlabel(r'$\mathrm{h}$',fontsize=fntsize)
-plt.ylabel(r'$\frac{\lambda_{\mathrm{min}}}{\lambda_{\mathrm{min}}}$',fontsize=fntsize)
+plt.ylabel(r'$\sqrt{\frac{\lambda_{\mathrm{min}}}{\lambda_{\mathrm{min}}}}$',fontsize=fntsize)
 plt.xscale("log")
 plt.yscale("log")
 plt.title("Max/Min. EigenValue from B.T Cinv B")
@@ -166,7 +166,7 @@ fig = plt.figure(figsize=(2.5, 2.5)); # Figure handle
 ax = plt.gca(); # Axes handle
 plt.rc('text', usetex=True)
 plt.xlabel(r'$\mathrm{h}$',fontsize=fntsize)
-plt.ylabel(r'$\lambda_{\mathrm{max}}$',fontsize=fntsize)
+plt.ylabel(r'$\sqrt{\lambda_{\mathrm{max}}}$',fontsize=fntsize)
 plt.xscale("log")
 plt.yscale("log")
 plt.title("EigenValues of B.T Cinv B (C2)")
@@ -194,7 +194,7 @@ fig = plt.figure(figsize=(2.5, 2.5)); # Figure handle
 ax = plt.gca(); # Axes handle
 plt.rc('text', usetex=True)
 plt.xlabel(r'$\mathrm{h}$',fontsize=fntsize)
-plt.ylabel(r'$\lambda_{\mathrm{min}}$',fontsize=fntsize)
+plt.ylabel(r'$\sqrt{\lambda_{\mathrm{min}}}$',fontsize=fntsize)
 plt.xscale("log")
 plt.yscale("log")
 plt.title("EigenValues of B.T Cinv B (C2)")
@@ -221,7 +221,7 @@ fig = plt.figure(figsize=(2.5, 2.5)); # Figure handle
 ax = plt.gca(); # Axes handle
 plt.rc('text', usetex=True)
 plt.xlabel(r'$\mathrm{h}$',fontsize=fntsize)
-plt.ylabel(r'$\frac{\lambda_{\mathrm{min}}}{\lambda_{\mathrm{min}}}$',fontsize=fntsize)
+plt.ylabel(r'$\sqrt{\frac{\lambda_{\mathrm{min}}}{\lambda_{\mathrm{min}}}}$',fontsize=fntsize)
 plt.xscale("log")
 plt.yscale("log")
 plt.title("Max/Min. EigenValue from B.T Cinv B (C2)")
@@ -242,7 +242,7 @@ fig = plt.figure(figsize=(2.5, 2.5)); # Figure handle
 ax = plt.gca(); # Axes handle
 plt.rc('text', usetex=True)
 plt.xlabel(r'$\mathrm{h}$',fontsize=fntsize)
-plt.ylabel(r'$\lambda_{\mathrm{max}}$',fontsize=fntsize)
+plt.ylabel(r'$\sqrt{\lambda_{\mathrm{max}}}$',fontsize=fntsize)
 plt.xscale("log")
 plt.yscale("log")
 plt.title("EigenValues of A")
@@ -258,7 +258,7 @@ fig = plt.figure(figsize=(2.5, 2.5)); # Figure handle
 ax = plt.gca(); # Axes handle
 plt.rc('text', usetex=True)
 plt.xlabel(r'$\mathrm{h}$',fontsize=fntsize)
-plt.ylabel(r'$\lambda_{\mathrm{min}}$',fontsize=fntsize)
+plt.ylabel(r'$\sqrt{\lambda_{\mathrm{min}}}$',fontsize=fntsize)
 plt.xscale("log")
 plt.yscale("log")
 plt.title("EigenValues of A")
@@ -276,7 +276,7 @@ fig = plt.figure(figsize=(2.5, 2.5)); # Figure handle
 ax = plt.gca(); # Axes handle
 plt.rc('text', usetex=True)
 plt.xlabel(r'$\mathrm{h}$',fontsize=fntsize)
-plt.ylabel(r'$\frac{\lambda_{\mathrm{min}}}{\lambda_{\mathrm{min}}}$',fontsize=fntsize)
+plt.ylabel(r'$\sqrt{\frac{\lambda_{\mathrm{min}}}{\lambda_{\mathrm{min}}}}$',fontsize=fntsize)
 plt.xscale("log")
 plt.yscale("log")
 plt.title("Max/Min. EigenValue from A")
@@ -293,7 +293,7 @@ fig = plt.figure(figsize=(2.5, 2.5)); # Figure handle
 ax = plt.gca(); # Axes handle
 plt.rc('text', usetex=True)
 plt.xlabel(r'$\mathrm{h}$',fontsize=fntsize)
-plt.ylabel(r'$\lambda_{\mathrm{max}}$',fontsize=fntsize)
+plt.ylabel(r'$\sqrt{\lambda_{\mathrm{max}}}$',fontsize=fntsize)
 plt.xscale("log")
 plt.yscale("log")
 plt.title("EigenValues of A")
@@ -309,7 +309,7 @@ fig = plt.figure(figsize=(2.5, 2.5)); # Figure handle
 ax = plt.gca(); # Axes handle
 plt.rc('text', usetex=True)
 plt.xlabel(r'$\mathrm{h}$',fontsize=fntsize)
-plt.ylabel(r'$\lambda_{\mathrm{min}}$',fontsize=fntsize)
+plt.ylabel(r'$\sqrt{\lambda_{\mathrm{min}}}$',fontsize=fntsize)
 plt.xscale("log")
 plt.yscale("log")
 plt.title("EigenValues of A")
@@ -327,7 +327,7 @@ fig = plt.figure(figsize=(2.5, 2.5)); # Figure handle
 ax = plt.gca(); # Axes handle
 plt.rc('text', usetex=True)
 plt.xlabel(r'$\mathrm{h}$',fontsize=fntsize)
-plt.ylabel(r'$\frac{\lambda_{\mathrm{min}}}{\lambda_{\mathrm{min}}}$',fontsize=fntsize)
+plt.ylabel(r'$\sqrt{\frac{\lambda_{\mathrm{min}}}{\lambda_{\mathrm{min}}}}$',fontsize=fntsize)
 plt.xscale("log")
 plt.yscale("log")
 plt.title("Max/Min. EigenValue from A on ker(B)")
