@@ -34,7 +34,7 @@ import numpy as np
 import time
 
 from lector_casos import lector_parametros, lector_unknowns, lector_matrices
-from inf_sup import mixed_infsup, primal_infsup, mixed_infsup_C, primal_infsup_onKerB
+from inf_sup import mixed_infsup, primal_infsup, mixed_infsup_C, primal_infsup_onKerB, mixed_infsup_C2
 import matplotlib.pyplot as plt
 import subprocess
 
@@ -93,6 +93,8 @@ for eps in epsArray:
     betaMaxFromH = []
     betaMinFromC = []
     betaMaxFromC = []
+    betaMinFromC2 = []
+    betaMaxFromC2 = []
     alphaMinFromA = []
     alphaMaxFromA = []
     alphaMaxFromAonkerB = []
@@ -123,6 +125,16 @@ for eps in epsArray:
         betaMaxFromC.append(maxEigenValue)
         print("Maximum EigenValue from B.T Cinv B = ", maxEigenValue, flush=True)
         print("Minimum EigenValue from B.T Cinv B = ", minEigenValue, flush=True)
+        print("\n\n")
+
+
+        eigenValuesFromC2 = mixed_infsup_C2(B, H, C)
+        minEigenValue = eigenValuesFromC2[0]
+        maxEigenValue = eigenValuesFromC2[1]
+        betaMinFromC2.append(minEigenValue)
+        betaMaxFromC2.append(maxEigenValue)
+        print("Maximum EigenValue from B Hinv B.T = ", maxEigenValue, flush=True)
+        print("Minimum EigenValue from B Hinv B.T = ", minEigenValue, flush=True)
         print("\n\n")
 
         #eigenValues = primal_infsup(M, H, eps)
@@ -158,6 +170,10 @@ for eps in epsArray:
 
     np.savetxt(ruta + "/beta_h_mineig_fromC.txt", np.vstack((num_ecs, betaMinFromC)))
     np.savetxt(ruta + "/beta_h_maxeig_fromC.txt", np.vstack((num_ecs, betaMaxFromC)))
+
+    
+    np.savetxt(ruta + "/beta_h_mineig_fromC2.txt", np.vstack((num_ecs, betaMinFromC2)))
+    np.savetxt(ruta + "/beta_h_maxeig_fromC2.txt", np.vstack((num_ecs, betaMaxFromC2)))
 
     np.savetxt(ruta + "/alpha_h_mineig_fromA.txt", np.vstack((num_ecs, alphaMinFromA)))
     np.savetxt(ruta + "/alpha_h_maxeig_fromA.txt", np.vstack((num_ecs, alphaMaxFromA)))
