@@ -108,8 +108,6 @@ def mixed_infsup(matB, matH, matL):
 
     """
 
-    print("Computing the eigenvalues of the matrix B Hinv B.T x = \lambda L x...", flush=True)
-
     start_time = time.time()
     
     matB = matB.astype(np.float64)
@@ -117,14 +115,15 @@ def mixed_infsup(matB, matH, matL):
     matL = matL.astype(np.float64)
 
     m,n = matB.shape
+    minDim = min(m,n)
     print("   The shape of B = ", matB.shape, flush=True)
     print("   The shape of H = ", matH.shape, flush=True)
     print("   The shape of L = ", matL.shape, flush=True)
 
     # null space of the B.T-matrix
     print("   Performing SVD of B.T to evaluate ker(B.T)", flush=True)
-    u , s, vt = svds(matB.T, k = m-1, tol = 1e-5, which = 'SM')
-    dimKernel = (abs(s) < 1e-5).sum()
+    u , s, vt = svds(matB.T, k = minDim-1, which = 'SM')
+    dimKernel = (abs(s) < 1e-6).sum()
     print("   The eigenvalues of B.T = ", s, flush=True)
     print("   The number of zero eigenvalues of B.T = ", dimKernel, flush=True)
     print("   The dimension of the kernel of B.T = ", dimKernel, flush=True)
@@ -153,18 +152,20 @@ def mixed_infsup(matB, matH, matL):
     
     try:
         # Calculamos el menor autovalor
-        eigValues, _ = eigsh(A = operator, k = m-1, M = matL, which = 'SA', tol = 1e-5)
-        eigValueMax, _ = eigsh(A = operator, k = 1, M = matL, which = 'LA', tol = 1e-5)
+        delta = 1e-10
+        eigValues, _ = eigsh(A = operator, k = m-1, M = matL, which = 'SA')
+        eigValueMax, _ = eigsh(A = operator, k = 1, M = matL, which = 'LA')
 
         eigValues = np.append(eigValues, eigValueMax)
 
-        rank = (abs(eigValues) > 1e-5).sum()
+        rank = (abs(eigValues) > delta).sum()
         
+        print("tolerance is             :", delta)
         print("Eigenvalues of B Hinv B.T= ", eigValues, flush=True)
         print("Number of zero eigenvalues of B Hinv B.T = ", m-rank, flush=True)
         print("rank of the matrix B H^-1 B.T= ", rank, flush=True)
 
-        mineigenValue = eigValues[dimKernel] # the first non-zero eigenvalue
+        mineigenValue = eigValues[m-rank] # the first non-zero eigenvalue
         maxeigenValue = eigValues[-1]
         eigenValues = [mineigenValue, maxeigenValue]
 
@@ -209,8 +210,6 @@ def mixed_infsup_C(matB, matH, matC):
 
     """
 
-    print("Computing the eigenvalues of the matrix B.T Cinv B x = \lambda H x ...", flush=True)
-
     start_time = time.time()
     
     matB = matB.astype(np.float64)
@@ -229,11 +228,12 @@ def mixed_infsup_C(matB, matH, matC):
 
     print("scaling of matrix C = ", scale_C)
 
-    u , s, vt = svds(matC, k = m-1, tol = 1e-5, which = 'SM')
-    umax , smax, vtmax = svds(matC, k = 1, tol = 1e-5, which = 'LM')
+    delta = 1e-6
+    u , s, vt = svds(matC, k = m-1, which = 'SM')
+    umax , smax, vtmax = svds(matC, k = 1, which = 'LM')
 
     s = np.append(s, smax)
-    dimKernel = (abs(s) < 1e-5).sum()
+    dimKernel = (abs(s) < delta).sum()
     print("   The eigenvalues of C = ", s, flush=True)
     print("   The number of zero eigenvalues of C = ", dimKernel, flush=True)
     print("   The dimension of the kernel of C = ", dimKernel, flush=True)
@@ -250,7 +250,7 @@ def mixed_infsup_C(matB, matH, matC):
             # Primero B^T * x
             Bx = B @ x
             # Ahora resolvemos H^(-1) * B^T * x
-            CinvBx = spsolve(-C, Bx)
+            CinvBx = spsolve(C, Bx)
             # B * H^(-1) * B^T * x
             return B.T @ CinvBx
         
@@ -263,8 +263,8 @@ def mixed_infsup_C(matB, matH, matC):
     
     try:
         # Calculamos el menor autovalor
-        eigValues, _ = eigsh(A = operator, k = n-1, M = matH, which = 'SA', tol = 1e-5)
-        eigValuesMax, _ = eigsh(A = operator, k = 1, M = matH, which = 'LA', tol = 1e-5)
+        eigValues, _ = eigsh(A = operator, k = n-1, M = matH, which = 'SA')
+        eigValuesMax, _ = eigsh(A = operator, k = 1, M = matH, which = 'LA')
 
         eigValues = eigValues / scale_C
 
@@ -322,8 +322,6 @@ def mixed_infsup_C2(matB, matH, matC):
 
     """
 
-    print("Computing the eigenvalues of the matrix B Hinv B.T = \lambda C x (continous pressure formu)...", flush=True)
-
     start_time = time.time()
     
     matB = matB.astype(np.float64)
@@ -342,11 +340,11 @@ def mixed_infsup_C2(matB, matH, matC):
 
     print("scaling of matrix C = ", scale_C)
 
-    u , s, vt = svds(matC, k = m-1, tol = 1e-5, which = 'SM')
-    umax , smax, vtmax = svds(matC, k = 1, tol = 1e-5, which = 'LM')
+    u , s, vt = svds(matC, k = m-1, which = 'SM')
+    umax , smax, vtmax = svds(matC, k = 1, which = 'LM')
 
     s = np.append(s, smax)
-    dimKernel = (abs(s) < 1e-5).sum()
+    dimKernel = (abs(s) < 1e-6).sum()
     print("   The eigenvalues of C = ", s, flush=True)
     print("   The number of zero eigenvalues of C = ", dimKernel, flush=True)
     print("   The dimension of the kernel of C = ", dimKernel, flush=True)
@@ -376,8 +374,8 @@ def mixed_infsup_C2(matB, matH, matC):
     
     try:
         # Calculamos el menor autovalor
-        eigValues, _ = eigsh(A = operator, k = m-1, M = -matC, which = 'SA', tol = 1e-5)
-        eigValuesMax, _ = eigsh(A = operator, k = 1, M = -matC, which = 'LA', tol = 1e-5)
+        eigValues, _ = eigsh(A = operator, k = m-1, M = matC, which = 'SA')
+        eigValuesMax, _ = eigsh(A = operator, k = 1, M = matC, which = 'LA')
 
         eigValues = eigValues * scale_C
 
@@ -436,8 +434,6 @@ def primal_infsup(matM, matH, eps = 0.0):
 
     """
 
-    print("Computing the eigenvalues of the matrix A x = \lambda H x ...", flush=True)
-    
     start_time = time.time()
     
     matM = matM.astype(np.float64)
@@ -466,24 +462,24 @@ def primal_infsup(matM, matH, eps = 0.0):
     
     try: 
 
-        Mdense = matM.toarray()
-        Hdense = matH.toarray()
+        #Mdense = matM.toarray()
+        #Hdense = matH.toarray()
         
-        regularized_M = Mdense + eps * np.eye(Mdense.shape[0])
-        regularized_H = Hdense + eps * np.eye(Hdense.shape[0])
+        #regularized_M = Mdense + eps * np.eye(Mdense.shape[0])
+        #regularized_H = Hdense + eps * np.eye(Hdense.shape[0])
 
         
-        regularized_M_sparse = csc_matrix(regularized_M)
-        regularized_H_sparse = csc_matrix(regularized_H)
+        #regularized_M_sparse = csc_matrix(regularized_M)
+        #regularized_H_sparse = csc_matrix(regularized_H)
 
 
-        allValues, _ = eigsh(A =  regularized_M_sparse, k = n-1, M = regularized_H_sparse, which = 'SA', tol = 1e-5, maxiter=n*200)
-        eigMaxValue, _ = eigsh(A =  regularized_M_sparse, k = 1, M = regularized_H_sparse, which = 'LA', tol = 1e-5, maxiter=n*200)
+        allValues, _ = eigsh(A =  matM, k = n-1, M = matH, which = 'SA',  maxiter=n*200)
+        eigMaxValue, _ = eigsh(A = matM, k = 1, M = matH, which = 'LA',  maxiter=n*200)
         allValues = np.append(allValues, eigMaxValue)
 
         allValues = allValues * scale_M/scale_H
 
-        rankM = (abs(allValues) > 1e-5).sum()
+        rankM = (abs(allValues) > 1e-10).sum()
 
         print("Eigenvalues of A = ", allValues, flush=True)
         print("rank of the matrix A = ", rankM, flush=True)
@@ -536,8 +532,6 @@ def primal_infsup_onKerB(matM, matH, matB, eps = 0.0):
 
     """
 
-    print("Computing the eigenvalues of the matrix P * A x = \lambda H x ...", flush=True)
-    
     start_time = time.time()
     
     matM = matM.astype(np.float64)
@@ -546,6 +540,7 @@ def primal_infsup_onKerB(matM, matH, matB, eps = 0.0):
 
     n, n = matM.shape
     m , n = matB.shape
+    minDim = min(m,n)
 
     print("The shape of M = ", matM.shape, flush=True)
     print("The shape of H = ", matH.shape, flush=True)
@@ -568,9 +563,9 @@ def primal_infsup_onKerB(matM, matH, matB, eps = 0.0):
     ## We will next evaluate the kernel of the B matrix
 
     print("Calculating the null space of B", flush=True)
-    u , s, vt = svds(matB, k = m-1, tol = 1e-5, which = 'SM')
+    u , s, vt = svds(matB, k = minDim-1,  which = 'SM')
 
-    nullspaceindices = np.where(s < 1e-5)
+    nullspaceindices = np.where(s < 1e-6)
     nullSpace = vt[nullspaceindices].T
 
     print("The eigenvalues of B = ", s, flush=True)
@@ -591,20 +586,20 @@ def primal_infsup_onKerB(matM, matH, matB, eps = 0.0):
         Hdense = matH.toarray()
 
         PMP = P @ Mdense
-        PHP =  Hdense 
+        PHP =  Hdense
 
         PMP_sparse = csc_matrix(PMP)
         PHP_sparse = csc_matrix(PHP)
 
         #mineig2 = eigh(regularized_M, regularized_H, eigvals_only=True, subset_by_index = [0,0], driver='gvx')
-        allValues, _ = eigsh(A =  PMP_sparse, k = n-1, ncv = n * 100, M = PHP_sparse, which = 'SA', tol = 1e-5, maxiter=n*200)
-        eigMaxValue, _ = eigsh(A =  PMP_sparse, k = 1, ncv = n * 100, M = PHP_sparse, which = 'LA', tol = 1e-5, maxiter=n*200)
+        allValues, _ = eigsh(A =  PMP_sparse, k = n-1, ncv = n * 100, M = PHP_sparse, which = 'SA',  maxiter=n*200)
+        eigMaxValue, _ = eigsh(A =  PMP_sparse, k = 1, ncv = n * 100, M = PHP_sparse, which = 'LA',  maxiter=n*200)
 
         allValues = np.append(allValues, eigMaxValue)
 
         allValues = allValues * scale_M/scale_H
 
-        rankM = (abs(allValues) > 1e-2).sum()
+        rankM = (abs(allValues) > 1e-10).sum()
 
 
         print("Eigenvalues of P * A * X= \lambda H * x ", allValues, flush=True)
@@ -622,5 +617,3 @@ def primal_infsup_onKerB(matM, matH, matB, eps = 0.0):
     except ArpackNoConvergence:
         print("Error de convergencia")
         eigenValues = [0.0, 0.0]
-
-    return eigenValues    
