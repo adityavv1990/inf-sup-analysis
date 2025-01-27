@@ -94,7 +94,7 @@ def lector_matrices(formulacion, ruta_carpetas = None):
     elif formulacion == 'mixed' :
         
         for carpeta in carpetas:
-
+            print("reading from ---", carpeta.path)
             As[carpeta.name] = hb_read(os.path.join(carpeta.path, 'A.hwb'))
             Bs[carpeta.name] = hb_read(os.path.join(carpeta.path, 'B.hwb'))
             Cs[carpeta.name] = hb_read(os.path.join(carpeta.path, 'C.hwb'))

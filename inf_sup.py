@@ -78,6 +78,23 @@ def operador_HnegHalf_M_HnegHalf(sqrtH, M):
 
 
 
+def evaluateNullSpaceBt(matB):
+
+    # null space of the B.T-matrix
+    m,n = matB.shape
+    minDim = min(m,n)
+    print("   The shape of B = ", matB.shape, flush=True)
+    print("   Performing SVD of B.T to evaluate ker(B.T)", flush=True)
+    u , s, vt = svds(matB.T, k = minDim-1, which = 'SM', tol = 1e-5)
+    dimKernel = (abs(s) < 1e-6).sum()
+    print("   The eigenvalues of B.T = ", s, flush=True)
+    print("   The number of zero eigenvalues of B.T = ", dimKernel, flush=True)
+    print("   The dimension of the kernel of B.T = ", dimKernel, flush=True)
+
+    return dimKernel
+
+
+
 def mixed_infsup(matB, matH, matL):
     """
     Calcula el valor de la constante inf-sup de la matriz B de una
@@ -120,13 +137,8 @@ def mixed_infsup(matB, matH, matL):
     print("   The shape of H = ", matH.shape, flush=True)
     print("   The shape of L = ", matL.shape, flush=True)
 
-    # null space of the B.T-matrix
-    print("   Performing SVD of B.T to evaluate ker(B.T)", flush=True)
-    u , s, vt = svds(matB.T, k = minDim-1, which = 'SM')
-    dimKernel = (abs(s) < 1e-6).sum()
-    print("   The eigenvalues of B.T = ", s, flush=True)
-    print("   The number of zero eigenvalues of B.T = ", dimKernel, flush=True)
-    print("   The dimension of the kernel of B.T = ", dimKernel, flush=True)
+    dimKernel = evaluateNullSpaceBt(matB)
+
 
     def operador_BHinvBt(B, H):
       
@@ -153,19 +165,19 @@ def mixed_infsup(matB, matH, matL):
     try:
         # Calculamos el menor autovalor
         delta = 1e-10
-        eigValues, _ = eigsh(A = operator, k = m-1, M = matL, which = 'SA')
-        eigValueMax, _ = eigsh(A = operator, k = 1, M = matL, which = 'LA')
+        eigValues, _ = eigsh(A = operator, k = m-1, M = matL, which = 'SA', tol = 1e-5)
+        eigValueMax, _ = eigsh(A = operator, k = 1, M = matL, which = 'LA', tol = 1e-5)
 
         eigValues = np.append(eigValues, eigValueMax)
 
-        rank = (abs(eigValues) > delta).sum()
+        rank = (np.sqrt(abs(eigValues)) < delta).sum()
         
         print("tolerance is             :", delta)
         print("Eigenvalues of B Hinv B.T= ", eigValues, flush=True)
         print("Number of zero eigenvalues of B Hinv B.T = ", m-rank, flush=True)
         print("rank of the matrix B H^-1 B.T= ", rank, flush=True)
 
-        mineigenValue = eigValues[m-rank] # the first non-zero eigenvalue
+        mineigenValue = eigValues[dimKernel] # the first non-zero eigenvalue
         maxeigenValue = eigValues[-1]
         eigenValues = [mineigenValue, maxeigenValue]
 
@@ -250,7 +262,7 @@ def mixed_infsup_C(matB, matH, matC):
             # Primero B^T * x
             Bx = B @ x
             # Ahora resolvemos H^(-1) * B^T * x
-            CinvBx = spsolve(C, Bx)
+            CinvBx = spsolve(-C, Bx)
             # B * H^(-1) * B^T * x
             return B.T @ CinvBx
         
@@ -473,19 +485,19 @@ def primal_infsup(matM, matH, eps = 0.0):
         #regularized_H_sparse = csc_matrix(regularized_H)
 
 
-        allValues, _ = eigsh(A =  matM, k = n-1, M = matH, which = 'SA',  maxiter=n*200)
-        eigMaxValue, _ = eigsh(A = matM, k = 1, M = matH, which = 'LA',  maxiter=n*200)
+        allValues, _ = eigsh(A =  matM, k = math.ceil(n/2.0), M = matH, which = 'SA', tol = 1e-10,  maxiter=n*200)
+        eigMaxValue, _ = eigsh(A = matM, k = 1, M = matH, which = 'LA', tol = 1e-10,  maxiter=n*200)
         allValues = np.append(allValues, eigMaxValue)
 
         allValues = allValues * scale_M/scale_H
 
-        rankM = (abs(allValues) > 1e-10).sum()
+        rankM = (abs(allValues) < 1e-10).sum()
 
         print("Eigenvalues of A = ", allValues, flush=True)
         print("rank of the matrix A = ", rankM, flush=True)
         print("Number of zero eigenvalues of A = ", n-rankM, flush=True)
 
-        minEigenValue = allValues[n-rankM]
+        minEigenValue = allValues[rankM]
         maxEigenValue = allValues[-1]
         eigenValues = [minEigenValue, maxEigenValue]
 

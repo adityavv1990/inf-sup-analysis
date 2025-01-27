@@ -30,13 +30,14 @@ Created on Wed Oct  9 21:05:16 2024
 
 import sys
 import os
-#os.environ["OMP_NUM_THREADS"] = "32"
+os.environ["OMP_NUM_THREADS"] = "1"
 
 import numpy as np
 import time
 
 from lector_casos import lector_parametros, lector_unknowns, lector_matrices
 from inf_sup import mixed_infsup, primal_infsup, mixed_infsup_C, primal_infsup_onKerB, mixed_infsup_C2
+from inf_sup import evaluateNullSpaceBt
 import matplotlib.pyplot as plt
 import subprocess
 
@@ -48,11 +49,12 @@ import subprocess
 evalBetaFromH = True
 evalBetaFromC = False
 evalBetaFromC2 = False
-evalAlphaFromA = True
+evalAlphaFromA = False
 evalAlphaFromAonKerB = False
+evalNullSpaceBt = False
 
 readMatrices = 'mixed'
-#readmatrices = 'standard'
+#readMatrices = 'standard'
 
 print("evalBetafromH            is      : ", evalBetaFromH)
 print("evalBetafromC            is      : ", evalBetaFromC)
@@ -70,12 +72,12 @@ sys.path.append(os.path.join(ruta_principal))
 
 
 # Ruta donde se encuentran los problemas varios
-ruta = os.path.join(ruta_principal, "6404_stokes_q1p0")
+ruta = os.path.join(ruta_principal, "mixed-p1-p1d/h-0.1")
 
 print("Reading from the directory:           ", ruta)
 
 # Lectura de los datos y parámetros
-casos = lector_parametros('stokes.txt', ruta_archivo = ruta)
+casos = lector_parametros('clamped.txt', ruta_archivo = ruta)
 num_ecs = lector_unknowns(ruta_carpetas = ruta)
 
 print("Number of divisions: ", casos)
@@ -263,6 +265,7 @@ if (evalAlphaFromA):
 
 
 
+
 if (evalAlphaFromAonKerB and readMatrices == 'mixed'):
     
     t1 = time.time()
@@ -301,6 +304,42 @@ if (evalAlphaFromAonKerB and readMatrices == 'mixed'):
     print(f"Time to solve P A x = \lambda H x : {elapsed_time:.6f} seconds", flush=True)
     print("----------------------------------------------------------------------")
     print("\n\n")
+
+
+
+
+if (evalNullSpaceBt and readMatrices == 'mixed'):
+    
+    t1 = time.time()
+    print("----------------------------------------------------------")
+    print("Performing SVD of B.T to evaluate its null space          ")
+    print("----------------------------------------------------------")
+    print("\n\n")
+    count = 0
+
+   
+    for A, B, C, H, L in zip(matsA, matsB, matsC, matsH, matsL):
+        print("----------")
+        print(" N = ", casos[count],flush=True)
+        print("----------")
+
+        (m, n) = B.shape
+
+        nullSpaceDim = evaluateNullSpaceBt(B)
+
+        print("Total dimensions of B.T = ", m, flush=True)
+        print("Dimension of null space = ", nullSpaceDim, flush=True)
+        print("\n\n")
+        count+=1
+    
+    
+    t2 = time.time()
+    elapsed_time = t2-t1
+    print("----------------------------------------------------------------------")
+    print(f"Time to calculate null space of B.T : {elapsed_time:.6f} seconds", flush=True)
+    print("----------------------------------------------------------------------")
+    print("\n\n")
+
 
 
 end_time = time.time()
