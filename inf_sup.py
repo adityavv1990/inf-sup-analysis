@@ -137,7 +137,22 @@ def mixed_infsup(matB, matH, matL):
     print("   The shape of H = ", matH.shape, flush=True)
     print("   The shape of L = ", matL.shape, flush=True)
 
-    dimKernel = evaluateNullSpaceBt(matB)
+    #dimKernel = evaluateNullSpaceBt(matB)
+
+    Bdense = matB.toarray()
+    Hdense = matH.toarray()
+    Ldense = matL.toarray()
+
+    Hinv = np.linalg.inv(Hdense)
+    BHinvBT = Bdense @ Hinv @ Bdense.T
+
+    # We will evaluate the rank of the matrix B*H^(-1)*B^T
+    rank = np.linalg.matrix_rank(BHinvBT)
+    m,m = BHinvBT.shape
+
+    print("Dimension of the square matrix B*H^(-1)*B^T = ", m, flush=True)
+    print("Rank of B*H^(-1)*B^T = ", rank, flush=True)
+
 
 
     def operador_BHinvBt(B, H):
@@ -164,20 +179,19 @@ def mixed_infsup(matB, matH, matL):
     
     try:
         # Calculamos el menor autovalor
-        delta = 1e-10
-        eigValues, _ = eigsh(A = operator, k = m-1, M = matL, which = 'SA', tol = 1e-5)
-        eigValueMax, _ = eigsh(A = operator, k = 1, M = matL, which = 'LA', tol = 1e-5)
+        delta = 1e-5
+        eigValues, _ = eigsh(A = operator, k = m-1, M = matL, which = 'SA', tol=1e-5)
+        eigValueMax, _ = eigsh(A = operator, k = 1, M = matL, which = 'LA', tol=1e-5)
 
         eigValues = np.append(eigValues, eigValueMax)
 
-        rank = (np.sqrt(abs(eigValues)) < delta).sum()
         
         print("tolerance is             :", delta)
         print("Eigenvalues of B Hinv B.T= ", eigValues, flush=True)
         print("Number of zero eigenvalues of B Hinv B.T = ", m-rank, flush=True)
         print("rank of the matrix B H^-1 B.T= ", rank, flush=True)
 
-        mineigenValue = eigValues[dimKernel] # the first non-zero eigenvalue
+        mineigenValue = eigValues[m-rank] # the first non-zero eigenvalue
         maxeigenValue = eigValues[-1]
         eigenValues = [mineigenValue, maxeigenValue]
 
