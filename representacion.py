@@ -39,7 +39,7 @@ import time
 
 from lector_casos import lector_parametros, lector_unknowns, lector_matrices
 from inf_sup import mixed_infsup, primal_infsup, mixed_infsup_C, primal_infsup_onKerB, mixed_infsup_C2
-from inf_sup import evaluateNullSpaceBt
+from inf_sup import evaluateNullSpaceOfMatrix
 import matplotlib.pyplot as plt
 import subprocess
 
@@ -50,7 +50,7 @@ import subprocess
 
 evalBetaFromH = False
 evalBetaFromC = False
-evalBetaFromC2 = False
+evalBetaFromC2 = True
 evalAlphaFromA = False
 evalAlphaFromAonKerB = False
 evalNullSpaceBt = False
@@ -328,7 +328,7 @@ if (evalNullSpaceBt and readMatrices == 'mixed'):
 
         (m, n) = B.shape
 
-        nullSpaceDim = evaluateNullSpaceBt(B)
+        nullSpaceDim = evaluateNullSpaceOfMatrix(B.T)
 
         print("Total dimensions of B.T = ", m, flush=True)
         print("Dimension of null space = ", nullSpaceDim, flush=True)
