@@ -50,7 +50,7 @@ import subprocess
 
 evalBetaFromH = False
 evalBetaFromC = False
-evalBetaFromC2 = True
+evalBetaFromC2 = False
 evalAlphaFromA = False
 evalAlphaFromAonKerB = False
 evalNullSpaceBt = False
@@ -68,13 +68,14 @@ print("reading matrices for forumlation : ", readMatrices)
 #################################################################
 
 start_time = time.time()
-ruta_principal = '/media/DATOS/aditya/Simulations/locking/'
+ruta_principal = '/mnt/disk-users/aditya/simulations/locking/'
+#ruta_principal = '/media/DATOS/aditya/Simulations/locking/'
 # Carpeta en la que estan las funciones que voy a utilizar
 sys.path.append(os.path.join(ruta_principal))
 
 
 # Ruta donde se encuentran los problemas varios
-ruta = os.path.join(ruta_principal, "beams/mixed-p1-p1c-zero-p-at-center/h-0.1")
+ruta = os.path.join(ruta_principal, "beams/mixedp1p1stabilized/h-0.1")
 
 print("Reading from the directory:           ", ruta)
 
