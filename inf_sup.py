@@ -78,18 +78,18 @@ def operador_HnegHalf_M_HnegHalf(sqrtH, M):
 
 
 
-def evaluateNullSpaceBt(matB):
+def evaluateNullSpaceOfMatrix(matX):
 
     # null space of the B.T-matrix
-    m,n = matB.shape
+    m,n = matX.shape
     minDim = min(m,n)
-    print("   The shape of B = ", matB.shape, flush=True)
-    print("   Performing SVD of B.T to evaluate ker(B.T)", flush=True)
-    u , s, vt = svds(matB.T, k = minDim-1, which = 'SM', tol = 1e-5)
+    print("   The shape of matX = ", matX.shape, flush=True)
+    print("   Performing SVD of matX to evaluate ker(matX)", flush=True)
+    u , s, vt = svds(matX, k = minDim-1, which = 'SM', tol = 1e-5)
     dimKernel = (abs(s) < 1e-6).sum()
-    print("   The eigenvalues of B.T = ", s, flush=True)
-    print("   The number of zero eigenvalues of B.T = ", dimKernel, flush=True)
-    print("   The dimension of the kernel of B.T = ", dimKernel, flush=True)
+    print("   The eigenvalues of matX = ", s, flush=True)
+    print("   The number of zero eigenvalues of matX = ", dimKernel, flush=True)
+    print("   The dimension of the kernel of matX = ", dimKernel, flush=True)
 
     return dimKernel
 
@@ -137,7 +137,7 @@ def mixed_infsup(matB, matH, matL):
     print("   The shape of H = ", matH.shape, flush=True)
     print("   The shape of L = ", matL.shape, flush=True)
 
-#    dimKernel = evaluateNullSpaceBt(matB)
+#    dimKernel = evaluateNullSpaceOfMatrix(matB.T)
 
     Bdense = matB.toarray()
     Hdense = matH.toarray()
@@ -251,18 +251,7 @@ def mixed_infsup_C(matB, matH, matC):
     scale_C = norm(matC)
     matC = matC/scale_C
 
-    print("scaling of matrix C = ", scale_C)
-
-    delta = 1e-6
-    u , s, vt = svds(matC, k = m-1, which = 'SM')
-    umax , smax, vtmax = svds(matC, k = 1, which = 'LM')
-
-    s = np.append(s, smax)
-    dimKernel = (abs(s) < delta).sum()
-    print("   The eigenvalues of C = ", s, flush=True)
-    print("   The number of zero eigenvalues of C = ", dimKernel, flush=True)
-    print("   The dimension of the kernel of C = ", dimKernel, flush=True)
-    
+    #dimKernel = evaluateNullSpaceOfMatrix(matC)    
 
     def operador_BtCinvB(B, C):
       
@@ -363,17 +352,7 @@ def mixed_infsup_C2(matB, matH, matC):
     scale_C = norm(matC)
     matC = matC/scale_C
 
-    print("scaling of matrix C = ", scale_C)
-
-    u , s, vt = svds(matC, k = m-1, which = 'SM')
-    umax , smax, vtmax = svds(matC, k = 1, which = 'LM')
-
-    s = np.append(s, smax)
-    dimKernel = (abs(s) < 1e-6).sum()
-    print("   The eigenvalues of C = ", s, flush=True)
-    print("   The number of zero eigenvalues of C = ", dimKernel, flush=True)
-    print("   The dimension of the kernel of C = ", dimKernel, flush=True)
-    
+    dimKernel = evaluateNullSpaceOfMatrix(matC)
 
     def operador_BHinvBt(B, H):
       
@@ -399,8 +378,8 @@ def mixed_infsup_C2(matB, matH, matC):
     
     try:
         # Calculamos el menor autovalor
-        eigValues, _ = eigsh(A = operator, k = m-1, M = -matC, which = 'SA')
-        eigValuesMax, _ = eigsh(A = operator, k = 1, M = -matC, which = 'LA')
+        eigValues, _ = eigsh(A = operator, k = m-1, M = -matC, which = 'SM', tol = 1e-5)
+        eigValuesMax, _ = eigsh(A = operator, k = 1, M = -matC, which = 'LM', tol = 1e-5)
 
 
         eigValues = np.append(eigValues, eigValuesMax)
