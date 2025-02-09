@@ -137,7 +137,7 @@ def mixed_infsup(matB, matH, matL):
     print("   The shape of H = ", matH.shape, flush=True)
     print("   The shape of L = ", matL.shape, flush=True)
 
-    #dimKernel = evaluateNullSpaceBt(matB)
+#    dimKernel = evaluateNullSpaceBt(matB)
 
     Bdense = matB.toarray()
     Hdense = matH.toarray()
@@ -179,11 +179,12 @@ def mixed_infsup(matB, matH, matL):
     
     try:
         # Calculamos el menor autovalor
-        delta = 1e-5
+        delta = 1e-6
         eigValues, _ = eigsh(A = operator, k = m-1, M = matL, which = 'SA', tol=1e-5)
         eigValueMax, _ = eigsh(A = operator, k = 1, M = matL, which = 'LA', tol=1e-5)
 
         eigValues = np.append(eigValues, eigValueMax)
+        #rank = (abs(eigValues) < delta).sum()
 
         
         print("tolerance is             :", delta)
@@ -242,8 +243,6 @@ def mixed_infsup_C(matB, matH, matC):
     matH = matH.astype(np.float64)
     matC = matC.astype(np.float64)
 
-    scale_C = norm(matC)
-    matC = matC/scale_C
     m,n = matB.shape
     print("The shape of B = ", matB.shape, flush=True)
     print("The shape of H = ", matH.shape, flush=True)
@@ -289,18 +288,20 @@ def mixed_infsup_C(matB, matH, matC):
     
     try:
         # Calculamos el menor autovalor
-        eigValues, _ = eigsh(A = operator, k = n-1, M = matH, which = 'SA')
-        eigValuesMax, _ = eigsh(A = operator, k = 1, M = matH, which = 'LA')
-
-        eigValues = eigValues / scale_C
-
+        eigValues, _ = eigsh(A = operator, k = n-1, M = matH, which = 'SM', tol = 1e-5)
+        eigValuesMax, _ = eigsh(A = operator, k = 1, M = matH, which = 'LM', tol = 1e-5)
+        
         eigValues = np.append(eigValues, eigValuesMax)
+
 
         rank = (abs(eigValues) > 1e-10).sum()
 
         print("Eigenvalues of B.T Cinv B = ", eigValues, flush=True)
         print("rank of the matrix B.T Cinv B= ", rank, flush=True)
         print("Number of zero eigenvalues of B.T Cinv B = ", n-rank, flush=True)
+
+        eigValues = eigValues / scale_C
+
 
         mineigenValue = eigValues[n-rank]
         maxeigenValue = eigValues[-1]
@@ -354,8 +355,6 @@ def mixed_infsup_C2(matB, matH, matC):
     matH = matH.astype(np.float64)
     matC = matC.astype(np.float64)
 
-    scale_C = norm(matC)
-    matC = matC/scale_C
     m,n = matB.shape
     print("The shape of B = ", matB.shape, flush=True)
     print("The shape of H = ", matH.shape, flush=True)
@@ -400,10 +399,9 @@ def mixed_infsup_C2(matB, matH, matC):
     
     try:
         # Calculamos el menor autovalor
-        eigValues, _ = eigsh(A = operator, k = m-1, M = matC, which = 'SA')
-        eigValuesMax, _ = eigsh(A = operator, k = 1, M = matC, which = 'LA')
+        eigValues, _ = eigsh(A = operator, k = m-1, M = -matC, which = 'SA')
+        eigValuesMax, _ = eigsh(A = operator, k = 1, M = -matC, which = 'LA')
 
-        eigValues = eigValues * scale_C
 
         eigValues = np.append(eigValues, eigValuesMax)
 
@@ -412,6 +410,8 @@ def mixed_infsup_C2(matB, matH, matC):
         print("Eigenvalues of B Hinv B.T = \lambda C x", eigValues, flush=True)
         print("rank of the matrix B Hinv B.T = ", rank, flush=True)
         print("Number of zero eigenvalues of B Hinv B.T = ", n-rank, flush=True)
+        
+        eigValues = eigValues * scale_C
 
         mineigenValue = eigValues[m-rank]
         maxeigenValue = eigValues[-1]
@@ -499,11 +499,9 @@ def primal_infsup(matM, matH, eps = 0.0):
         #regularized_H_sparse = csc_matrix(regularized_H)
 
 
-        allValues, _ = eigsh(A =  matM, k = math.ceil(n/2.0), M = matH, which = 'SA', tol = 1e-10,  maxiter=n*200)
-        eigMaxValue, _ = eigsh(A = matM, k = 1, M = matH, which = 'LA', tol = 1e-10,  maxiter=n*200)
+        allValues, _ = eigsh(A =  matM, k = n -1, M = matH, which = 'SA', tol = 1e-5,  maxiter=n*20)
+        eigMaxValue, _ = eigsh(A = matM, k = 1, M = matH, which = 'LA', tol = 1e-5,  maxiter=n*20)
         allValues = np.append(allValues, eigMaxValue)
-
-        allValues = allValues * scale_M/scale_H
 
         rankM = (abs(allValues) < 1e-10).sum()
 
@@ -511,7 +509,9 @@ def primal_infsup(matM, matH, eps = 0.0):
         print("rank of the matrix A = ", rankM, flush=True)
         print("Number of zero eigenvalues of A = ", n-rankM, flush=True)
 
-        minEigenValue = allValues[rankM]
+        allValues = allValues * scale_M/scale_H
+
+        minEigenValue = allValues[n-rankM]
         maxEigenValue = allValues[-1]
         eigenValues = [minEigenValue, maxEigenValue]
 

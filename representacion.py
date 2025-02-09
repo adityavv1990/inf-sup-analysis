@@ -6,7 +6,7 @@ Created on Wed Oct  9 21:05:16 2024
 """
  
 # This code analysis the stability of a mixed finite element formulation
-# it takes as input, matrices A, B, C that are the matrices from the stifness:
+# it takes as input, matrices A, B, C that are the matrices from the stiffness:
 #
 #           | A     B.T |
 #     K  =  |           |
@@ -22,15 +22,17 @@ Created on Wed Oct  9 21:05:16 2024
 #        L is m by m     (gram matrix corresponding to the dual variable) 
 
 #  There are three important functions in the file inf_sup.py
-#       - mixed_infsup: that computes the eigenvalues of the matrix B Hinv B.T
-#       - mixed_infsup_C: that computes the eigenvalues of the matrix B.T Cinv B
-#       - primal_infsup: that computes the eigenvalues of the matrix A
-#       - primal_infsup_onKerB: that computes the eigenvalues of the matrix A but only for vectors in the kernel of B
+#       - mixed_infsup: that computes the eigenvalues of the generalized problem: B H^{-1} B.T w = \lambda L w 
+#       - mixed_infsup_C: that computes the eigenvalues of the generalized problem B.T C^{-1} B w = \lambda H w
+#       - primal_infsup: that computes the eigenvalues of the generalized problem: A x = \lambda H x
+#       - primal_infsup_onKerB: that computes the eigenvalues of the matrix A but only for vectors in the kernel of B (this is not accurate)
 
 
 import sys
 import os
-os.environ["OMP_NUM_THREADS"] = "1"
+os.environ["MKL_NUM_THREADS"] = "8"
+os.environ["NUMEXPR_NUM_THREADS"] = "8"
+os.environ["OMP_NUM_THREADS"] = "8"
 
 import numpy as np
 import time
@@ -46,9 +48,9 @@ import subprocess
 #################################################################
 # Set flags for the evaluation of different eigenvalue problems
 
-evalBetaFromH = True
+evalBetaFromH = False
 evalBetaFromC = False
-evalBetaFromC2 = False
+evalBetaFromC2 = True
 evalAlphaFromA = False
 evalAlphaFromAonKerB = False
 evalNullSpaceBt = False
@@ -72,7 +74,7 @@ sys.path.append(os.path.join(ruta_principal))
 
 
 # Ruta donde se encuentran los problemas varios
-ruta = os.path.join(ruta_principal, "mixed-p1-p1d/h-0.1")
+ruta = os.path.join(ruta_principal, "beams/mixed-p1-p1c-zero-p-at-center/h-0.1")
 
 print("Reading from the directory:           ", ruta)
 
