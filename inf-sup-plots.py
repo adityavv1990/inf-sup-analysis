@@ -31,7 +31,28 @@ nDivisions = np.array([10, 20, 40, 80, 100, 200, 300, 400, 500])
 h = 1/(nDivisions)
 
 epsArray = [0.0]
-path = "/home/aditya/Documents/locking/simulations/clamped-beam/infsup-analysis/mixed-p1p1c/mixed-p1-p1c-zero-p-at-center/h-0.1/"
+path = "/home/aditya/Documents/locking/simulations/clamped-beam/infsup-analysis/mixed-p1p1/tol-1e-1-for-mineig-C/"
+
+files = [f for f in os.listdir(path) if os.path.isfile(os.path.join(path, f))]
+
+plotBetaFromH = False
+plotBetaFromC = False
+plotBetaFromC2 = False
+plotalphaFromA = False
+
+if ("beta_h_maxeig_fromH.txt" in files):
+    plotBetaFromH = True
+
+if ("beta_h_maxeig_fromC.txt" in files):
+    plotBetaFromC = True
+
+if ("beta_h_maxeig_fromC2.txt" in files):
+    plotBetaFromC2 = True
+
+if ("alpha_h_maxeig_fromA.txt" in files):
+    plotalphaFromA = True
+
+
 os.chdir(path)
 
 
@@ -39,111 +60,113 @@ os.chdir(path)
 #### Plot inf-sup constant \beta from Hinv matrix
 ##############################################################################################################
 
-#### Plot maximum Eigenvalue
-fig = plt.figure(figsize=(2.5, 2.5)); # Figure handle
-ax = plt.gca(); # Axes handle
-plt.rc('text', usetex=True)
-plt.xlabel(r'$\mathrm{h}$',fontsize=fntsize)
-plt.ylabel(r'$M_b = \sqrt{\lambda_{\mathrm{max}}}$',fontsize=fntsize)
-ax.set_xscale("log")
-ax.set_yscale("log")
-#ax.xaxis.set_major_locator(MultipleLocator(0.1))
-#ax.xaxis.set_major_formatter('{x:.2f}')
-# ax.xaxis.set_major_locator(FixedLocator(h[::2]))
-# ax.xaxis.set_major_formatter('{x:.2f}')
-# ax.yaxis.set_major_locator(MultipleLocator(0.05))
-# ax.yaxis.set_major_formatter('{x:.2f}')
+if (plotBetaFromH):
 
-ax.tick_params(axis='x', which='both', labelsize=fntsize)
-ax.tick_params(axis='y', which='both', labelsize=fntsize)
-ax.xaxis.set_minor_locator(MultipleLocator(0.05))
-#plt.title("EigenValues of B Hinv B.T", fontsize=fntsize)
-#plt.xlim([h[-1], h[0]])
-#plt.ylim([1.0, 1.3])
+    #### Plot maximum Eigenvalue
+    fig = plt.figure(figsize=(2.5, 2.5)); # Figure handle
+    ax = plt.gca(); # Axes handle
+    plt.rc('text', usetex=True)
+    plt.xlabel(r'$\mathrm{h}$',fontsize=fntsize)
+    plt.ylabel(r'$M_b = \sqrt{\lambda_{\mathrm{max}}}$',fontsize=fntsize)
+    ax.set_xscale("log")
+    ax.set_yscale("log")
+    #ax.xaxis.set_major_locator(MultipleLocator(0.1))
+    #ax.xaxis.set_major_formatter('{x:.2f}')
+    # ax.xaxis.set_major_locator(FixedLocator(h[::2]))
+    # ax.xaxis.set_major_formatter('{x:.2f}')
+    # ax.yaxis.set_major_locator(MultipleLocator(0.05))
+    # ax.yaxis.set_major_formatter('{x:.2f}')
 
-
-filename = "beta_h_maxeig_fromH.txt"
-data = np.loadtxt(filename, dtype=float)
-betaMax = data[1,:]
-
-params, _ = curve_fit(linear, np.log(h), np.log(np.sqrt(betaMax)))
-b2, log_a = params
-print("b2 = ", b2, "log_a = ", log_a)
-hfit = np.linspace(h[0], h[-1], 100)
-betaMaxFit = np.exp(log_a) * hfit**b2
-
-ax.plot(h,np.sqrt(betaMax),"o",linestyle = 'solid', linewidth = lwdth, color = "red")
-#ax.plot(hfit, betaMaxFit, "--", linewidth = lwdth, color = "black", label = r"$\lambda_{\mathrm{max}} \propto h^{%.2f}$" % b2)
-#ax.legend(loc='upper left', fontsize=fntsizelgd)
-plt.savefig("beta_h_max_fromH.pdf", format="pdf", dpi=1000,bbox_inches="tight")
-
-#### Plot minimum Eigenvalue
-fig = plt.figure(figsize=(2.5, 2.5)); # Figure handle
-ax = plt.gca(); # Axes handle
-plt.rc('text', usetex=True)
-plt.xlabel(r'$\mathrm{h}$',fontsize=fntsize)
-plt.ylabel(r'$\beta_h = \sqrt{\lambda_{\mathrm{min}}}$',fontsize=fntsize)
-plt.xscale("log")
-plt.yscale("log")
-#ax.xaxis.set_major_locator(MultipleLocator(0.1))
-#ax.xaxis.set_major_formatter('{x:.2f}')
-# ax.xaxis.set_major_locator(FixedLocator(h[::2]))
-# ax.xaxis.set_major_formatter('{x:.2f}')
-# ax.yaxis.set_major_locator(MultipleLocator(0.1))
-# ax.yaxis.set_major_formatter('{x:.2f}')
-
-# ax.tick_params(axis='x', which='both', labelsize=fntsize)
-# ax.tick_params(axis='y', which='both', labelsize=fntsize)
-# ax.xaxis.set_minor_locator(MultipleLocator(5))
-
-#plt.title("EigenValues of B Hinv B.T", fontsize=fntsize)
-#plt.xlim([h[-1], h[0]])
-
-ax.tick_params(axis='x', labelsize=fntsize)
-ax.tick_params(axis='y', labelsize=fntsize)
-filename = "beta_h_mineig_fromH.txt"
-data = np.loadtxt(filename, dtype=float)
-betaMin = data[1,:]
-
-# Fit the min eigenvalue to a power law
-params, _ = curve_fit(linear, np.log(h), np.log(np.sqrt(betaMin)))
-b1, log_a = params
-print("b1 = ", b1)
-hfit = np.linspace(h[0], h[-1], 100)
-betaMinFit = np.exp(log_a) * hfit**b1
+    ax.tick_params(axis='x', which='both', labelsize=fntsize)
+    ax.tick_params(axis='y', which='both', labelsize=fntsize)
+    ax.xaxis.set_minor_locator(MultipleLocator(0.05))
+    #plt.title("EigenValues of B Hinv B.T", fontsize=fntsize)
+    #plt.xlim([h[-1], h[0]])
+    #plt.ylim([1.0, 1.3])
 
 
-plt.plot(h,np.sqrt(betaMin),"o",linestyle = 'solid', linewidth = lwdth, color = "red")
-plt.plot(hfit, betaMinFit, "--", linewidth = lwdth, color = "black", label = r"$\beta_h \propto h^{%.2f}$" % b1)
-ax.legend(loc='upper left', fontsize=fntsizelgd)
-plt.savefig("beta_h_min_fromH.pdf", format="pdf", dpi=1000,bbox_inches="tight")
+    filename = "beta_h_maxeig_fromH.txt"
+    data = np.loadtxt(filename, dtype=float)
+    betaMax = data[1,:]
+
+    params, _ = curve_fit(linear, np.log(h), np.log(np.sqrt(betaMax)))
+    b2, log_a = params
+    print("b2 = ", b2)
+    hfit = np.linspace(h[0], h[-1], 100)
+    betaMaxFit = np.exp(log_a) * hfit**b2
+
+    ax.plot(h,np.sqrt(betaMax),"o",linestyle = 'solid', linewidth = lwdth, color = "red")
+    #ax.plot(hfit, betaMaxFit, "--", linewidth = lwdth, color = "black", label = r"$\lambda_{\mathrm{max}} \propto h^{%.2f}$" % b2)
+    #ax.legend(loc='upper left', fontsize=fntsizelgd)
+    plt.savefig("beta_h_max_fromH.pdf", format="pdf", dpi=1000,bbox_inches="tight")
+
+    #### Plot minimum Eigenvalue
+    fig = plt.figure(figsize=(2.5, 2.5)); # Figure handle
+    ax = plt.gca(); # Axes handle
+    plt.rc('text', usetex=True)
+    plt.xlabel(r'$\mathrm{h}$',fontsize=fntsize)
+    plt.ylabel(r'$\beta_h = \sqrt{\lambda_{\mathrm{min}}}$',fontsize=fntsize)
+    plt.xscale("log")
+    plt.yscale("log")
+    #ax.xaxis.set_major_locator(MultipleLocator(0.1))
+    #ax.xaxis.set_major_formatter('{x:.2f}')
+    # ax.xaxis.set_major_locator(FixedLocator(h[::2]))
+    # ax.xaxis.set_major_formatter('{x:.2f}')
+    # ax.yaxis.set_major_locator(MultipleLocator(0.1))
+    # ax.yaxis.set_major_formatter('{x:.2f}')
+
+    # ax.tick_params(axis='x', which='both', labelsize=fntsize)
+    # ax.tick_params(axis='y', which='both', labelsize=fntsize)
+    # ax.xaxis.set_minor_locator(MultipleLocator(5))
+
+    #plt.title("EigenValues of B Hinv B.T", fontsize=fntsize)
+    #plt.xlim([h[-1], h[0]])
+
+    ax.tick_params(axis='x', labelsize=fntsize)
+    ax.tick_params(axis='y', labelsize=fntsize)
+    filename = "beta_h_mineig_fromH.txt"
+    data = np.loadtxt(filename, dtype=float)
+    betaMin = data[1,:]
+
+    # Fit the min eigenvalue to a power law
+    params, _ = curve_fit(linear, np.log(h), np.log(np.sqrt(betaMin)))
+    b1, log_a = params
+    print("b1 = ", b1)
+    hfit = np.linspace(h[0], h[-1], 100)
+    betaMinFit = np.exp(log_a) * hfit**b1
 
 
-#### Plot max/min Eigenvalue
-fig = plt.figure(figsize=(2.5, 2.5)); # Figure handle
-ax = plt.gca(); # Axes handle
-plt.rc('text', usetex=True)
-plt.xlabel(r'$\mathrm{h}$',fontsize=fntsize)
-plt.ylabel(r'$\frac{M_b}{\beta_h} = \sqrt{\frac{\lambda_{\mathrm{max}}}{\lambda_{\mathrm{min}}}}$',fontsize=fntsize)
-plt.xscale("log")
-plt.yscale("log")
+    plt.plot(h,np.sqrt(betaMin),"o",linestyle = 'solid', linewidth = lwdth, color = "red")
+    plt.plot(hfit, betaMinFit, "--", linewidth = lwdth, color = "black", label = r"$\beta_h \propto h^{%.2f}$" % b1)
+    ax.legend(loc='upper left', fontsize=fntsizelgd)
+    plt.savefig("beta_h_min_fromH.pdf", format="pdf", dpi=1000,bbox_inches="tight")
 
-#ax.xaxis.set_major_locator(MultipleLocator(0.1))
-#ax.xaxis.set_major_formatter('{x:.2f}')
-# ax.xaxis.set_major_locator(FixedLocator(h[::2]))
-# ax.xaxis.set_major_formatter('{x:.2f}')
-# ax.yaxis.set_major_locator(MultipleLocator(5.0))
-# ax.yaxis.set_major_formatter('{x:.2f}')
 
-ax.tick_params(axis='x', which='both', labelsize=fntsize)
-ax.tick_params(axis='y', which='both', labelsize=fntsize)
-ax.xaxis.set_minor_locator(MultipleLocator(5))
+    #### Plot max/min Eigenvalue
+    fig = plt.figure(figsize=(2.5, 2.5)); # Figure handle
+    ax = plt.gca(); # Axes handle
+    plt.rc('text', usetex=True)
+    plt.xlabel(r'$\mathrm{h}$',fontsize=fntsize)
+    plt.ylabel(r'$\frac{M_b}{\beta_h} = \sqrt{\frac{\lambda_{\mathrm{max}}}{\lambda_{\mathrm{min}}}}$',fontsize=fntsize)
+    plt.xscale("log")
+    plt.yscale("log")
 
-plt.plot(h,np.sqrt(betaMax/betaMin),"o",linestyle = 'solid', linewidth = lwdth, color = "red")
-ratioOfPowers = b2-b1
-plt.plot(hfit, betaMaxFit/betaMinFit, "--", linewidth = lwdth, color = "black", label = r"$\frac{\lambda_{\mathrm{max}}}{\lambda_{\mathrm{min}}} \propto h^{%.2f}$" % ratioOfPowers)
-ax.legend(loc='upper right', fontsize=fntsizelgd)
-plt.savefig("beta_h_max_by_min_fromH.pdf", format="pdf", dpi=1000,bbox_inches="tight")
+    #ax.xaxis.set_major_locator(MultipleLocator(0.1))
+    #ax.xaxis.set_major_formatter('{x:.2f}')
+    # ax.xaxis.set_major_locator(FixedLocator(h[::2]))
+    # ax.xaxis.set_major_formatter('{x:.2f}')
+    # ax.yaxis.set_major_locator(MultipleLocator(5.0))
+    # ax.yaxis.set_major_formatter('{x:.2f}')
+
+    ax.tick_params(axis='x', which='both', labelsize=fntsize)
+    ax.tick_params(axis='y', which='both', labelsize=fntsize)
+    ax.xaxis.set_minor_locator(MultipleLocator(5))
+
+    plt.plot(h,np.sqrt(betaMax/betaMin),"o",linestyle = 'solid', linewidth = lwdth, color = "red")
+    ratioOfPowers = b2-b1
+    plt.plot(hfit, betaMaxFit/betaMinFit, "--", linewidth = lwdth, color = "black", label = r"$\frac{\lambda_{\mathrm{max}}}{\lambda_{\mathrm{min}}} \propto h^{\mathdefault{%.2f}}$" % ratioOfPowers)
+    ax.legend(loc='upper right', fontsize=fntsizelgd)
+    plt.savefig("beta_h_max_by_min_fromH.pdf", format="pdf", dpi=1000,bbox_inches="tight")
 
 
 ##############################################################################################################
@@ -152,80 +175,82 @@ plt.savefig("beta_h_max_by_min_fromH.pdf", format="pdf", dpi=1000,bbox_inches="t
 
 #### Plot maximum Eigenvalue
 
-fig = plt.figure(figsize=(2.5, 2.5)); # Figure handle
-ax = plt.gca(); # Axes handle
-plt.rc('text', usetex=True)
-plt.xlabel(r'$\mathrm{h}$',fontsize=fntsize)
-plt.ylabel(r'$M_b = \sqrt{\lambda_{\mathrm{max}}}$',fontsize=fntsize)
-plt.xscale("log")
-plt.yscale("log")
-ax.tick_params(axis='x', labelsize=fntsize)
-ax.tick_params(axis='y', labelsize=fntsize) 
-#plt.title("EigenValues of B.T Cinv B", fontsize=fntsize)
+if (plotBetaFromC):
 
-filename = "beta_h_maxeig_fromC.txt"
-data = np.loadtxt(filename, dtype=float)
-betaMax = data[1,:]
+    fig = plt.figure(figsize=(2.5, 2.5)); # Figure handle
+    ax = plt.gca(); # Axes handle
+    plt.rc('text', usetex=True)
+    plt.xlabel(r'$\mathrm{h}$',fontsize=fntsize)
+    plt.ylabel(r'$M_b = \sqrt{\lambda_{\mathrm{max}}}$',fontsize=fntsize)
+    plt.xscale("log")
+    plt.yscale("log")
+    ax.tick_params(axis='x', labelsize=fntsize)
+    ax.tick_params(axis='y', labelsize=fntsize) 
+    #plt.title("EigenValues of B.T Cinv B", fontsize=fntsize)
 
-# Fit the max eigenvalue to a power law
-params, _ = curve_fit(linear, np.log(h), np.log(np.sqrt(betaMax)))
-b2, log_a = params
-print("b2 = ", b2, "log_a = ", log_a)
-hfit = np.linspace(h[0], h[-1], 100)
-betaMaxFit = np.exp(log_a) * hfit**b2
+    filename = "beta_h_maxeig_fromC.txt"
+    data = np.loadtxt(filename, dtype=float)
+    betaMax = data[1,:]
 
-
-plt.plot(h,np.sqrt(betaMax),"o",linestyle = 'solid', linewidth = lwdth, color = "red")
-#plt.plot(hfit, betaMaxFit, "--", linewidth = lwdth, color = "black", label = r"$\lambda_{\mathrm{max}} \propto h^{%.2f}$" % b2)
-#ax.legend(loc='upper left', fontsize=fntsizelgd)
-plt.savefig("beta_h_max_fromC.pdf", format="pdf", dpi=1000,bbox_inches="tight")
-
-#### Plot minimum Eigenvalue
-
-fig = plt.figure(figsize=(2.5, 2.5)); # Figure handle
-ax = plt.gca(); # Axes handle
-plt.rc('text', usetex=True)
-plt.xlabel(r'$\mathrm{h}$',fontsize=fntsize)
-plt.ylabel(r'$\beta_h = \sqrt{\lambda_{\mathrm{min}}}$',fontsize=fntsize)
-plt.xscale("log")
-plt.yscale("log")
-ax.tick_params(axis='x', labelsize=fntsize)
-ax.tick_params(axis='y', labelsize=fntsize) 
-#plt.title("EigenValues of B.T Cinv B", fontsize=fntsize)
+    # Fit the max eigenvalue to a power law
+    params, _ = curve_fit(linear, np.log(h), np.log(np.sqrt(betaMax)))
+    b2, log_a = params
+    print("b2 = ", b2, "log_a = ", log_a)
+    hfit = np.linspace(h[0], h[-1], 100)
+    betaMaxFit = np.exp(log_a) * hfit**b2
 
 
-filename = "beta_h_mineig_fromC.txt"
-data = np.loadtxt(filename, dtype=float)
-betaMin = data[1,:]
-# Fit the min eigenvalue to a power law
-params, _ = curve_fit(linear, np.log(h), np.log(np.sqrt(betaMin)))
-b1, log_a = params
-print("b1 = ", b1)
-hfit = np.linspace(h[0], h[-1], 100)
-betaMinFit = np.exp(log_a) * hfit**b1
+    plt.plot(h,np.sqrt(betaMax),"o",linestyle = 'solid', linewidth = lwdth, color = "red")
+    #plt.plot(hfit, betaMaxFit, "--", linewidth = lwdth, color = "black", label = r"$\lambda_{\mathrm{max}} \propto h^{%.2f}$" % b2)
+    #ax.legend(loc='upper left', fontsize=fntsizelgd)
+    plt.savefig("beta_h_max_fromC.pdf", format="pdf", dpi=1000,bbox_inches="tight")
+
+    #### Plot minimum Eigenvalue
+
+    fig = plt.figure(figsize=(2.5, 2.5)); # Figure handle
+    ax = plt.gca(); # Axes handle
+    plt.rc('text', usetex=True)
+    plt.xlabel(r'$\mathrm{h}$',fontsize=fntsize)
+    plt.ylabel(r'$\beta_h = \sqrt{\lambda_{\mathrm{min}}}$',fontsize=fntsize)
+    plt.xscale("log")
+    plt.yscale("log")
+    ax.tick_params(axis='x', labelsize=fntsize)
+    ax.tick_params(axis='y', labelsize=fntsize) 
+    #plt.title("EigenValues of B.T Cinv B", fontsize=fntsize)
 
 
-plt.plot(h,np.sqrt(betaMin),"o",linestyle = 'solid', linewidth = lwdth, color = "red")
-plt.plot(hfit, betaMinFit, "--", linewidth = lwdth, color = "black", label = r"$\lambda_{\mathrm{min}} \propto h^{%.2f}$" % b1)
-ax.legend(loc='upper left', fontsize=fntsizelgd)
-plt.savefig("beta_h_min_fromC.pdf", format="pdf", dpi=1000,bbox_inches="tight")
+    filename = "beta_h_mineig_fromC.txt"
+    data = np.loadtxt(filename, dtype=float)
+    betaMin = data[1,:]
+    # Fit the min eigenvalue to a power law
+    params, _ = curve_fit(linear, np.log(h), np.log(np.sqrt(betaMin)))
+    b1, log_a = params
+    print("b1 = ", b1)
+    hfit = np.linspace(h[0], h[-1], 100)
+    betaMinFit = np.exp(log_a) * hfit**b1
 
-#### Plot max/min Eigenvalue
-fig = plt.figure(figsize=(2.5, 2.5)); # Figure handle
-ax = plt.gca(); # Axes handle
-plt.rc('text', usetex=True)
-plt.xlabel(r'$\mathrm{h}$',fontsize=fntsize)
-plt.ylabel(r'$\frac{M_b}{\beta_h} = \sqrt{\frac{\lambda_{\mathrm{max}}}{\lambda_{\mathrm{min}}}}$',fontsize=fntsize)
-plt.xscale("log")
-plt.yscale("log")
-ax.tick_params(axis='x', labelsize=fntsize)
-ax.tick_params(axis='y', labelsize=fntsize) 
-plt.title("Max/Min. EigenValue from B.T Cinv B", fontsize=fntsize)
-plt.plot(h,np.sqrt(betaMax/betaMin),"o",linestyle = 'solid', linewidth = lwdth, color = "red")
-ratioOfPowers = b1-b2
-plt.plot(hfit, betaMaxFit/betaMinFit, "--", linewidth = lwdth, color = "black", label = r"$\frac{\lambda_{\mathrm{max}}}{\lambda_{\mathrm{min}}} \propto h^{%.2f}$" % ratioOfPowers)
-ax.legend(loc='upper left', fontsize=fntsizelgd)
-plt.savefig("beta_h_max_by_min_fromC.pdf", format="pdf", dpi=1000,bbox_inches="tight")
+
+    plt.plot(h,np.sqrt(betaMin),"o",linestyle = 'solid', linewidth = lwdth, color = "red")
+    plt.plot(hfit, betaMinFit, "--", linewidth = lwdth, color = "black", label = r"$\lambda_{\mathrm{min}} \propto h^{%.2f}$" % b1)
+    ax.legend(loc='upper left', fontsize=fntsizelgd)
+    plt.savefig("beta_h_min_fromC.pdf", format="pdf", dpi=1000,bbox_inches="tight")
+
+    #### Plot max/min Eigenvalue
+    fig = plt.figure(figsize=(2.5, 2.5)); # Figure handle
+    ax = plt.gca(); # Axes handle
+    plt.rc('text', usetex=True)
+    plt.xlabel(r'$\mathrm{h}$',fontsize=fntsize)
+    plt.ylabel(r'$\frac{M_b}{\beta_h} = \sqrt{\frac{\lambda_{\mathrm{max}}}{\lambda_{\mathrm{min}}}}$',fontsize=fntsize)
+    plt.xscale("log")
+    plt.yscale("log")
+    ax.tick_params(axis='x', labelsize=fntsize)
+    ax.tick_params(axis='y', labelsize=fntsize) 
+    plt.title("Max/Min. EigenValue from B.T Cinv B", fontsize=fntsize)
+    plt.plot(h,np.sqrt(betaMax/betaMin),"o",linestyle = 'solid', linewidth = lwdth, color = "red")
+    ratioOfPowers = b1-b2
+    plt.plot(hfit, betaMaxFit/betaMinFit, "--", linewidth = lwdth, color = "black", label = r"$\frac{\lambda_{\mathrm{max}}}{\lambda_{\mathrm{min}}} \propto h^{\mathdefault{%.2f}}$" % ratioOfPowers)
+    ax.legend(loc='upper left', fontsize=fntsizelgd)
+    plt.savefig("beta_h_max_by_min_fromC.pdf", format="pdf", dpi=1000,bbox_inches="tight")
 
 
 ##############################################################################################################
@@ -234,80 +259,82 @@ plt.savefig("beta_h_max_by_min_fromC.pdf", format="pdf", dpi=1000,bbox_inches="t
 
 #### Plot maximum Eigenvalue
 
-fig = plt.figure(figsize=(2.5, 2.5)); # Figure handle
-ax = plt.gca(); # Axes handle
-plt.rc('text', usetex=True)
-plt.xlabel(r'$\mathrm{h}$',fontsize=fntsize)
-plt.ylabel(r'$M_b = \sqrt{\lambda_{\mathrm{max}}}$',fontsize=fntsize)
-plt.xscale("log")
-plt.yscale("log")
-ax.tick_params(axis='x', labelsize=fntsize)
-ax.tick_params(axis='y', labelsize=fntsize) 
-#plt.title("EigenValues of B.T Cinv B (C2)",   fontsize=fntsize)
+if (plotBetaFromC2):
 
-filename = "beta_h_maxeig_fromC2.txt"
-data = np.loadtxt(filename, dtype=float)
-betaMax = data[1,:]
+    fig = plt.figure(figsize=(2.5, 2.5)); # Figure handle
+    ax = plt.gca(); # Axes handle
+    plt.rc('text', usetex=True)
+    plt.xlabel(r'$\mathrm{h}$',fontsize=fntsize)
+    plt.ylabel(r'$M_b = \sqrt{\lambda_{\mathrm{max}}}$',fontsize=fntsize)
+    plt.xscale("log")
+    plt.yscale("log")
+    ax.tick_params(axis='x', labelsize=fntsize)
+    ax.tick_params(axis='y', labelsize=fntsize) 
+    #plt.title("EigenValues of B.T Cinv B (C2)",   fontsize=fntsize)
 
-# Fit the max eigenvalue to a power law
-params, _ = curve_fit(linear, np.log(h), np.log(np.sqrt(betaMax)))
-b2, log_a = params
-print("b2 = ", b2, "log_a = ", log_a)
-hfit = np.linspace(h[0], h[-1], 100)
-betaMaxFit = np.exp(log_a) * hfit**b2
+    filename = "beta_h_maxeig_fromC2.txt"
+    data = np.loadtxt(filename, dtype=float)
+    betaMax = data[1,:]
 
-
-plt.plot(h,np.sqrt(betaMax),"o",linestyle = 'solid', linewidth = lwdth, color = "red")
-plt.plot(hfit, betaMaxFit, "--", linewidth = lwdth, color = "black", label = r"$\lambda_{\mathrm{max}} \propto h^{%.2f}$" % b2)
-ax.legend(loc='upper left', fontsize=fntsizelgd)
-plt.savefig("beta_h_max_fromC2.pdf", format="pdf", dpi=1000,bbox_inches="tight")
-
-#### Plot minimum Eigenvalue
-
-fig = plt.figure(figsize=(2.5, 2.5)); # Figure handle
-ax = plt.gca(); # Axes handle
-plt.rc('text', usetex=True)
-plt.xlabel(r'$\mathrm{h}$',fontsize=fntsize)
-plt.ylabel(r'$\beta_h = \sqrt{\lambda_{\mathrm{min}}}$',fontsize=fntsize)
-plt.xscale("log")
-plt.yscale("log")
-ax.tick_params(axis='x', labelsize=fntsize)
-ax.tick_params(axis='y', labelsize=fntsize)
-#plt.title("EigenValues of B.T Cinv B (C2)", fontsize=fntsize)
+    # Fit the max eigenvalue to a power law
+    params, _ = curve_fit(linear, np.log(h), np.log(np.sqrt(betaMax)))
+    b2, log_a = params
+    print("b2 = ", b2, "log_a = ", log_a)
+    hfit = np.linspace(h[0], h[-1], 100)
+    betaMaxFit = np.exp(log_a) * hfit**b2
 
 
-filename = "beta_h_mineig_fromC2.txt"
-data = np.loadtxt(filename, dtype=float)
-betaMin = data[1,:]
-# Fit the min eigenvalue to a power law
-params, _ = curve_fit(linear, np.log(h), np.log(np.sqrt(betaMin)))
-b1, log_a = params
-print("b1 = ", b1)
-hfit = np.linspace(h[0], h[-1], 100)
-betaMinFit = np.exp(log_a) * hfit**b1
+    plt.plot(h,np.sqrt(betaMax),"o",linestyle = 'solid', linewidth = lwdth, color = "red")
+    plt.plot(hfit, betaMaxFit, "--", linewidth = lwdth, color = "black", label = r"$\lambda_{\mathrm{max}} \propto h^{%.2f}$" % b2)
+    ax.legend(loc='upper left', fontsize=fntsizelgd)
+    plt.savefig("beta_h_max_fromC2.pdf", format="pdf", dpi=1000,bbox_inches="tight")
+
+    #### Plot minimum Eigenvalue
+
+    fig = plt.figure(figsize=(2.5, 2.5)); # Figure handle
+    ax = plt.gca(); # Axes handle
+    plt.rc('text', usetex=True)
+    plt.xlabel(r'$\mathrm{h}$',fontsize=fntsize)
+    plt.ylabel(r'$\beta_h = \sqrt{\lambda_{\mathrm{min}}}$',fontsize=fntsize)
+    plt.xscale("log")
+    plt.yscale("log")
+    ax.tick_params(axis='x', labelsize=fntsize)
+    ax.tick_params(axis='y', labelsize=fntsize)
+    #plt.title("EigenValues of B.T Cinv B (C2)", fontsize=fntsize)
 
 
-plt.plot(h,np.sqrt(betaMin),"o",linestyle = 'solid', linewidth = lwdth, color = "red")
-plt.plot(hfit, betaMinFit, "--", linewidth = lwdth, color = "black", label = r"$\lambda_{\mathrm{min}} \propto h^{%.2f}$" % b1)
-ax.legend(loc='upper left', fontsize=fntsizelgd)
-plt.savefig("beta_h_min_fromC2.pdf", format="pdf", dpi=1000,bbox_inches="tight")
+    filename = "beta_h_mineig_fromC2.txt"
+    data = np.loadtxt(filename, dtype=float)
+    betaMin = data[1,:]
+    # Fit the min eigenvalue to a power law
+    params, _ = curve_fit(linear, np.log(h), np.log(np.sqrt(betaMin)))
+    b1, log_a = params
+    print("b1 = ", b1)
+    hfit = np.linspace(h[0], h[-1], 100)
+    betaMinFit = np.exp(log_a) * hfit**b1
 
-#### Plot max/min Eigenvalue
-fig = plt.figure(figsize=(2.5, 2.5)); # Figure handle
-ax = plt.gca(); # Axes handle
-plt.rc('text', usetex=True)
-plt.xlabel(r'$\mathrm{h}$',fontsize=fntsize)
-plt.ylabel(r'$\frac{M_b}{\beta_h} = \sqrt{\frac{\lambda_{\mathrm{max}}}{\lambda_{\mathrm{min}}}}$',fontsize=fntsize)
-plt.xscale("log")
-plt.yscale("log")
-ax.tick_params(axis='x', labelsize=fntsize)
-ax.tick_params(axis='y', labelsize=fntsize)
-plt.title("Max/Min. EigenValue from B.T Cinv B (C2)", fontsize=fntsize)
-plt.plot(h,np.sqrt(betaMax/betaMin),"o",linestyle = 'solid', linewidth = lwdth, color = "red")
-ratioOfPowers = b1 - b2
-plt.plot(hfit, betaMaxFit/betaMinFit, "--", linewidth = lwdth, color = "black", label = r"$\frac{\lambda_{\mathrm{max}}}{\lambda_{\mathrm{min}}} \propto h^{%.2f}$" % ratioOfPowers)
-ax.legend(loc='upper left', fontsize=fntsizelgd)
-plt.savefig("beta_h_max_by_min_fromC2.pdf", format="pdf", dpi=1000,bbox_inches="tight")
+
+    plt.plot(h,np.sqrt(betaMin),"o",linestyle = 'solid', linewidth = lwdth, color = "red")
+    plt.plot(hfit, betaMinFit, "--", linewidth = lwdth, color = "black", label = r"$\lambda_{\mathrm{min}} \propto h^{%.2f}$" % b1)
+    ax.legend(loc='upper left', fontsize=fntsizelgd)
+    plt.savefig("beta_h_min_fromC2.pdf", format="pdf", dpi=1000,bbox_inches="tight")
+
+    #### Plot max/min Eigenvalue
+    fig = plt.figure(figsize=(2.5, 2.5)); # Figure handle
+    ax = plt.gca(); # Axes handle
+    plt.rc('text', usetex=True)
+    plt.xlabel(r'$\mathrm{h}$',fontsize=fntsize)
+    plt.ylabel(r'$\frac{M_b}{\beta_h} = \sqrt{\frac{\lambda_{\mathrm{max}}}{\lambda_{\mathrm{min}}}}$',fontsize=fntsize)
+    plt.xscale("log")
+    plt.yscale("log")
+    ax.tick_params(axis='x', labelsize=fntsize)
+    ax.tick_params(axis='y', labelsize=fntsize)
+    plt.title("Max/Min. EigenValue from B.T Cinv B (C2)", fontsize=fntsize)
+    plt.plot(h,np.sqrt(betaMax/betaMin),"o",linestyle = 'solid', linewidth = lwdth, color = "red")
+    ratioOfPowers = b1 - b2
+    plt.plot(hfit, betaMaxFit/betaMinFit, "--", linewidth = lwdth, color = "black", label = r"$\frac{\lambda_{\mathrm{max}}}{\lambda_{\mathrm{min}}} \propto h^{\mathdefault{%.2f}}$" % ratioOfPowers)
+    ax.legend(loc='upper left', fontsize=fntsizelgd)
+    plt.savefig("beta_h_max_by_min_fromC2.pdf", format="pdf", dpi=1000,bbox_inches="tight")
 
 
 
@@ -315,76 +342,78 @@ plt.savefig("beta_h_max_by_min_fromC2.pdf", format="pdf", dpi=1000,bbox_inches="
 #### Plot inf-sup constant \alpha from A matrix
 ##############################################################################################################
 
-#### Plot maximum Eigenvalue
-fig = plt.figure(figsize=(2.5, 2.5)); # Figure handle
-ax = plt.gca(); # Axes handle
-plt.rc('text', usetex=True)
-plt.xlabel(r'$\mathrm{h}$',fontsize=fntsize)
-plt.ylabel(r'$M_a = \lambda_\mathrm{max}$',fontsize=fntsize)
-plt.xscale("log")
-plt.yscale("log")
-# plt.title("EigenValues of A",   fontsize=fntsize)
-#ax.xaxis.set_major_locator(MultipleLocator(0.1))
-#ax.xaxis.set_major_formatter('{x:.2f}')
-# ax.xaxis.set_major_locator(FixedLocator(h[::2]))
-# ax.xaxis.set_major_formatter('{x:.2f}')
-# plt.ylim([0.99,1.01])
-# ax.tick_params(axis='x', which='both', labelsize=fntsize)
-# ax.tick_params(axis='y', which='both', labelsize=fntsize)
-# ax.xaxis.set_minor_locator(MultipleLocator(5))
+if (plotalphaFromA): 
 
-filename = "alpha_h_maxeig_fromA.txt"
-data = np.loadtxt(filename, dtype=float)
-alphaMax = data[1,:]
-plt.plot(h,alphaMax,"o",linestyle = 'solid', linewidth = lwdth, color = "red")
-plt.savefig("alpha_h_max_fromA.pdf", format="pdf", dpi=1000,bbox_inches="tight")
+    #### Plot maximum Eigenvalue
+    fig = plt.figure(figsize=(2.5, 2.5)); # Figure handle
+    ax = plt.gca(); # Axes handle
+    plt.rc('text', usetex=True)
+    plt.xlabel(r'$\mathrm{h}$',fontsize=fntsize)
+    plt.ylabel(r'$M_a = \lambda_\mathrm{max}$',fontsize=fntsize)
+    plt.xscale("log")
+    plt.yscale("log")
+    # plt.title("EigenValues of A",   fontsize=fntsize)
+    #ax.xaxis.set_major_locator(MultipleLocator(0.1))
+    #ax.xaxis.set_major_formatter('{x:.2f}')
+    # ax.xaxis.set_major_locator(FixedLocator(h[::2]))
+    # ax.xaxis.set_major_formatter('{x:.2f}')
+    # plt.ylim([0.99,1.01])
+    # ax.tick_params(axis='x', which='both', labelsize=fntsize)
+    # ax.tick_params(axis='y', which='both', labelsize=fntsize)
+    # ax.xaxis.set_minor_locator(MultipleLocator(5))
 
-#### Plot minimum Eigenvalue
-fig = plt.figure(figsize=(2.5, 2.5)); # Figure handle
-ax = plt.gca(); # Axes handle
-plt.rc('text', usetex=True)
-plt.xlabel(r'$\mathrm{h}$',fontsize=fntsize)
-plt.ylabel(r'$\alpha_h = \lambda_{\mathrm{min}}$',fontsize=fntsize)
-plt.xscale("log")
-plt.yscale("log")
-#plt.title("EigenValues of A", fontsize=fntsize)
-#ax.xaxis.set_major_locator(MultipleLocator(0.1))
-# #ax.xaxis.set_major_formatter('{x:.2f}')
-# ax.xaxis.set_major_locator(FixedLocator(h[::2]))
-# ax.xaxis.set_major_formatter('{x:.2f}')
-#plt.ylim([0.99,1.01])
-# ax.tick_params(axis='x', which='both', labelsize=fntsize)
-# ax.tick_params(axis='y', which='both', labelsize=fntsize)
-# ax.xaxis.set_minor_locator(MultipleLocator(5))
+    filename = "alpha_h_maxeig_fromA.txt"
+    data = np.loadtxt(filename, dtype=float)
+    alphaMax = data[1,:]
+    plt.plot(h,alphaMax,"o",linestyle = 'solid', linewidth = lwdth, color = "red")
+    plt.savefig("alpha_h_max_fromA.pdf", format="pdf", dpi=1000,bbox_inches="tight")
 
-
-filename = "alpha_h_mineig_fromA.txt"
-data = np.loadtxt(filename, dtype=float)
-alphaMin = data[1,:]
-plt.plot(h,alphaMin,"o",linestyle = 'solid', linewidth = lwdth, color = "red")
-plt.savefig("alpha_h_min_fromA.pdf", format="pdf", dpi=1000,bbox_inches="tight")
+    #### Plot minimum Eigenvalue
+    fig = plt.figure(figsize=(2.5, 2.5)); # Figure handle
+    ax = plt.gca(); # Axes handle
+    plt.rc('text', usetex=True)
+    plt.xlabel(r'$\mathrm{h}$',fontsize=fntsize)
+    plt.ylabel(r'$\alpha_h = \lambda_{\mathrm{min}}$',fontsize=fntsize)
+    plt.xscale("log")
+    plt.yscale("log")
+    #plt.title("EigenValues of A", fontsize=fntsize)
+    #ax.xaxis.set_major_locator(MultipleLocator(0.1))
+    # #ax.xaxis.set_major_formatter('{x:.2f}')
+    # ax.xaxis.set_major_locator(FixedLocator(h[::2]))
+    # ax.xaxis.set_major_formatter('{x:.2f}')
+    #plt.ylim([0.99,1.01])
+    # ax.tick_params(axis='x', which='both', labelsize=fntsize)
+    # ax.tick_params(axis='y', which='both', labelsize=fntsize)
+    # ax.xaxis.set_minor_locator(MultipleLocator(5))
 
 
-#### Plot max/min Eigenvalue
-fig = plt.figure(figsize=(2.5, 2.5)); # Figure handle
-ax = plt.gca(); # Axes handle
-plt.rc('text', usetex=True)
-plt.xlabel(r'$\mathrm{h}$',fontsize=fntsize)
-plt.ylabel(r'$\frac{M_a}{\alpha_h} = \frac{\lambda_{\mathrm{max}}}{\lambda_{\mathrm{min}}}$',fontsize=fntsize)
-plt.xscale("log")
-plt.yscale("log")
-# plt.title("Max/Min. EigenValue from A", fontsize=fntsize)
-#ax.xaxis.set_major_locator(MultipleLocator(0.1))
-#ax.xaxis.set_major_formatter('{x:.2f}')
-# ax.xaxis.set_major_locator(FixedLocator(h[::2]))
-# ax.xaxis.set_major_formatter('{x:.2f}')
-# plt.ylim([0.99,1.01])
-# ax.tick_params(axis='x', which='both', labelsize=fntsize)
-# ax.tick_params(axis='y', which='both', labelsize=fntsize)
-# ax.xaxis.set_minor_locator(MultipleLocator(5))
+    filename = "alpha_h_mineig_fromA.txt"
+    data = np.loadtxt(filename, dtype=float)
+    alphaMin = data[1,:]
+    plt.plot(h,alphaMin,"o",linestyle = 'solid', linewidth = lwdth, color = "red")
+    plt.savefig("alpha_h_min_fromA.pdf", format="pdf", dpi=1000,bbox_inches="tight")
 
-plt.plot(h,alphaMax/alphaMin,"o",linestyle = 'solid', linewidth = lwdth, color = "red")
-plt.savefig("alphah_max_by_min_fromA.pdf", format="pdf", dpi=1000,bbox_inches="tight")
+
+    #### Plot max/min Eigenvalue
+    fig = plt.figure(figsize=(2.5, 2.5)); # Figure handle
+    ax = plt.gca(); # Axes handle
+    plt.rc('text', usetex=True)
+    plt.xlabel(r'$\mathrm{h}$',fontsize=fntsize)
+    plt.ylabel(r'$\frac{M_a}{\alpha_h} = \frac{\lambda_{\mathrm{max}}}{\lambda_{\mathrm{min}}}$',fontsize=fntsize)
+    plt.xscale("log")
+    plt.yscale("log")
+    # plt.title("Max/Min. EigenValue from A", fontsize=fntsize)
+    #ax.xaxis.set_major_locator(MultipleLocator(0.1))
+    #ax.xaxis.set_major_formatter('{x:.2f}')
+    # ax.xaxis.set_major_locator(FixedLocator(h[::2]))
+    # ax.xaxis.set_major_formatter('{x:.2f}')
+    # plt.ylim([0.99,1.01])
+    # ax.tick_params(axis='x', which='both', labelsize=fntsize)
+    # ax.tick_params(axis='y', which='both', labelsize=fntsize)
+    # ax.xaxis.set_minor_locator(MultipleLocator(5))
+
+    plt.plot(h,alphaMax/alphaMin,"o",linestyle = 'solid', linewidth = lwdth, color = "red")
+    plt.savefig("alphah_max_by_min_fromA.pdf", format="pdf", dpi=1000,bbox_inches="tight")
 
 
 ##############################################################################################################
