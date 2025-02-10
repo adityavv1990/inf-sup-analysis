@@ -11,7 +11,7 @@ from scipy.sparse.linalg import eigsh, spsolve, LinearOperator, ArpackNoConverge
 from scipy.linalg import sqrtm, matrix_balance
 from scipy.sparse import csc_matrix
 import time, math, sys
-from scipy.linalg import eigh, inv
+from scipy.linalg import eigh, inv, eig
 
 
 
@@ -643,3 +643,41 @@ def primal_infsup_onKerB(matM, matH, matB, eps = 0.0):
     except ArpackNoConvergence:
         print("Error de convergencia")
         eigenValues = [0.0, 0.0]
+
+
+
+
+def checkSingularityOfAKK(matM, matB):
+
+    m,n = matB.shape
+    print("Shape of the matrix B : ", matB.shape)
+    U, S, Vt = svds(matB, k = m-1, which = 'SM', tol = 1e-5) # singular value decomposition of B
+    Umax, Smax, Vtmax = svds(matB, k = 1, which = 'LM', tol = 1e-5) # singular value decomposition of B
+    S = np.append(S, Smax)
+    Vt = np.append(Vt, Vtmax, axis=0)
+    print("The eigenvalues of B are : ", S)
+    
+    null_mask = (S < 1e-10)  # Threshold to detect zero singular values
+    null_space_vectors = Vt.T[:, null_mask]
+    _, nK = null_space_vectors.shape
+    print("Dimension of the ker (B) = ", nK)
+
+    ortho_null_mask = (S >= 1e-10)
+    ortho_null_space_vectors = Vt.T[:,ortho_null_mask]
+    _, nH = ortho_null_space_vectors.shape
+    print("Dimension of the space orthogonal to ker (B) = ", nH)
+
+    # Changing the matrix A to its new basis:
+    V = np.append(ortho_null_space_vectors, null_space_vectors, axis=1)# Transformation matrix
+    
+    matMDense = matM.toarray()
+    Anew = V.T @ matMDense @ V
+    # Identify the block that corresponds to the AKK 
+    AKK = Anew[nH:, nH:]
+    print("Akk is", AKK)
+
+    # evaluate the eigenvectors of AKK 
+    eigenvalues, eigenvectors = eig(AKK, homogeneous_eigvals=False)
+    print("Eigenvalues of AKK = ", eigenvalues)
+    #eigenvaluesA, eigenvectorsA = eig(matMDense)
+    #print("Eigenvalues of A = ", eigenvaluesA)

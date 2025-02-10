@@ -39,7 +39,7 @@ import time
 
 from lector_casos import lector_parametros, lector_unknowns, lector_matrices
 from inf_sup import mixed_infsup, primal_infsup, mixed_infsup_C, primal_infsup_onKerB, mixed_infsup_C2
-from inf_sup import evaluateNullSpaceOfMatrix
+from inf_sup import evaluateNullSpaceOfMatrix, checkSingularityOfAKK
 import matplotlib.pyplot as plt
 import subprocess
 
@@ -50,10 +50,11 @@ import subprocess
 
 evalBetaFromH = False
 evalBetaFromC = False
-evalBetaFromC2 = True
+evalBetaFromC2 = False
 evalAlphaFromA = False
 evalAlphaFromAonKerB = False
 evalNullSpaceBt = False
+evalSingularityOfAKK = False
 
 readMatrices = 'mixed'
 #readMatrices = 'standard'
@@ -63,6 +64,8 @@ print("evalBetafromC            is      : ", evalBetaFromC)
 print("evalBetafromC2           is      : ", evalBetaFromC2)
 print("evalAlphaFromA           is      : ", evalAlphaFromA)
 print("evalAlphaFromAonKerB     is      : ", evalAlphaFromAonKerB)
+print("evalNullSpaceBt          is      : ", evalNullSpaceBt)
+print("evalSingularityOfAKK     is      : ", evalSingularityOfAKK)
 print("reading matrices for forumlation : ", readMatrices)
 
 #################################################################
@@ -75,7 +78,7 @@ sys.path.append(os.path.join(ruta_principal))
 
 
 # Ruta donde se encuentran los problemas varios
-ruta = os.path.join(ruta_principal, "beams/mixedp1p1stabilized/h-0.1")
+ruta = os.path.join(ruta_principal, "beams/check-positive-definiteness/mixedp1p1c")
 
 print("Reading from the directory:           ", ruta)
 
@@ -343,6 +346,36 @@ if (evalNullSpaceBt and readMatrices == 'mixed'):
     print("----------------------------------------------------------------------")
     print("\n\n")
 
+
+
+if (evalSingularityOfAKK and readMatrices == "mixed"):
+
+    t1 = time.time()
+    print("----------------------------------------------------------")
+    print("Checking if the operator A on ker(B) is non-singular      ")
+    print("----------------------------------------------------------")
+    print("\n\n")
+    count = 0
+
+   
+    for A, B, C, H, L in zip(matsA, matsB, matsC, matsH, matsL):
+        print("----------")
+        print(" N = ", casos[count],flush=True)
+        print("----------")
+
+        (m, n) = B.shape
+
+        checkSingularityOfAKK(A, B)
+        print("\n\n")
+        count+=1
+    
+    
+    t2 = time.time()
+    elapsed_time = t2-t1
+    print("----------------------------------------------------------------------")
+    print(f"Time to check for singularity of AKK : {elapsed_time:.6f} seconds", flush=True)
+    print("----------------------------------------------------------------------")
+    print("\n\n")
 
 
 end_time = time.time()
