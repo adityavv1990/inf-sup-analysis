@@ -45,6 +45,23 @@ def checkpositiveDefiniteness(matM, matH):
 
 
 
+def checkpositiveDefiniteness(matM):
+
+
+    (n1,n2) = matM.shape
+    n = min(n1,n2)
+
+    eigvals, _ = eigsh(matM, k=1, which='SA', maxiter = n*20, tol = 1e-5, ncv = n*20)  # Smallest eigenvalue
+    print("Minimum eigenvalue of matrix is ", eigvals[0], flush=True)
+
+    if (abs(eigvals[0]) > 1e-14):
+        print("Matrix is positive definite", flush=True)
+    else:
+        print("Matrix is not positive definite", flush=True)
+
+
+
+
 def symmetrizeMatrix(matrix):
 
     matrix = matrix + matrix.T
@@ -249,6 +266,7 @@ def mixed_infsup_C(matB, matH, matC):
     print("The shape of C = ", matC.shape, flush=True)
 
     scale_C = norm(matC)
+    print("scaling of matrix C = ", scale_C)
     matC = matC/scale_C
 
     #dimKernel = evaluateNullSpaceOfMatrix(matC)    
@@ -350,6 +368,7 @@ def mixed_infsup_C2(matB, matH, matC):
     print("The shape of C = ", matC.shape, flush=True)
 
     scale_C = norm(matC)
+    print("scaling of matrix C = ", scale_C)
     matC = matC/scale_C
 
     dimKernel = evaluateNullSpaceOfMatrix(matC)
@@ -449,7 +468,9 @@ def primal_infsup(matM, matH, eps = 0.0):
     print("The shape of H = ", matH.shape, flush=True)
 
     ## We will verify if H and M are positive definite or not
-    checkpositiveDefiniteness(matM, matH)
+    print("Checking positive definiteness of A: ", flush=True)
+    checkpositiveDefiniteness(matM)
+
     matM = symmetrizeMatrix(matM)
     matH = symmetrizeMatrix(matH)
     
@@ -482,9 +503,9 @@ def primal_infsup(matM, matH, eps = 0.0):
         eigMaxValue, _ = eigsh(A = matM, k = 1, M = matH, which = 'LA', tol = 1e-5,  maxiter=n*20)
         allValues = np.append(allValues, eigMaxValue)
 
-        rankM = (abs(allValues) < 1e-10).sum()
+        rankM = (abs(allValues) > 1e-10).sum()
 
-        print("Eigenvalues of A = ", allValues, flush=True)
+        print("Eigenvalues of A w = lambda H w", allValues, flush=True)
         print("rank of the matrix A = ", rankM, flush=True)
         print("Number of zero eigenvalues of A = ", n-rankM, flush=True)
 
