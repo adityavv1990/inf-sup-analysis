@@ -650,8 +650,9 @@ def primal_infsup_onKerB(matM, matH, matB, eps = 0.0):
 def checkSingularityOfAKK(matM, matB):
 
     m,n = matB.shape
+    minDim = min(m,n)
     print("Shape of the matrix B : ", matB.shape)
-    U, S, Vt = svds(matB, k = m-1, which = 'SM', tol = 1e-5) # singular value decomposition of B
+    U, S, Vt = svds(matB, k = minDim-1, which = 'SM', tol = 1e-5) # singular value decomposition of B
     Umax, Smax, Vtmax = svds(matB, k = 1, which = 'LM', tol = 1e-5) # singular value decomposition of B
     S = np.append(S, Smax)
     Vt = np.append(Vt, Vtmax, axis=0)
