@@ -39,7 +39,7 @@ import time
 
 from lector_casos import lector_parametros, lector_unknowns, lector_matrices
 from inf_sup import mixed_infsup, primal_infsup, mixed_infsup_C, primal_infsup_onKerB, mixed_infsup_C2
-from inf_sup import evaluateNullSpaceOfMatrix, checkSingularityOfAKK
+from inf_sup import evaluateNullSpaceOfMatrix, checkSingularityOfAKK, is_symmetric_sparse, checkpositiveDefiniteness
 import matplotlib.pyplot as plt
 import subprocess
 
@@ -55,6 +55,8 @@ evalAlphaFromA = False
 evalAlphaFromAonKerB = False
 evalNullSpaceBt = False
 evalSingularityOfAKK = False
+checkSymmetryOfMatrix = True
+checkPostiveDefiniteness = True
 
 readMatrices = 'mixed'
 #readMatrices = 'standard'
@@ -78,7 +80,7 @@ sys.path.append(os.path.join(ruta_principal))
 
 
 # Ruta donde se encuentran los problemas varios
-ruta = os.path.join(ruta_principal, "beams/check-positive-definiteness/mixedp1p1c")
+ruta = os.path.join(ruta_principal, "beams/check-positive-definiteness/mixedp1p0")
 
 print("Reading from the directory:           ", ruta)
 
@@ -167,6 +169,10 @@ if (evalBetaFromC and readMatrices == 'mixed'):
         print("----------")
         print(" N = ", casos[count],flush=True)
         print("----------")
+
+        if (checkSymmetryOfMatrix):
+            flag = is_symmetric_sparse(C)
+            print("The matrix C is symmetric!" if flag else "The matrix C is unsymmetric!", flush=True)
         
         eigenValuesFromC = mixed_infsup_C(B, H, C)
         minEigenValue = eigenValuesFromC[0]
@@ -208,6 +214,10 @@ if (evalBetaFromC2 and readMatrices == 'mixed'):
         print("----------")
         print(" N = ", casos[count],flush=True)
         print("----------")
+
+        if (checkSymmetryOfMatrix):
+            flag = is_symmetric_sparse(C)
+            print("The matrix C is symmetric!" if flag else "The matrix C is unsymmetric!", flush=True)
         
         eigenValuesFromC2 = mixed_infsup_C2(B, H, C)
         minEigenValue = eigenValuesFromC2[0]
@@ -247,6 +257,10 @@ if (evalAlphaFromA):
         print("----------")
         print(" N = ", casos[count],flush=True)
         print("----------")
+
+        if (checkSymmetryOfMatrix):
+            flag = is_symmetric_sparse(A)
+            print("The matrix A is symmetric!" if flag else "The matrix A is unsymmetric!", flush=True)
 
         eigenValuesFromA = primal_infsup(A, H)
 
@@ -376,6 +390,77 @@ if (evalSingularityOfAKK and readMatrices == "mixed"):
     print(f"Time to check for singularity of AKK : {elapsed_time:.6f} seconds", flush=True)
     print("----------------------------------------------------------------------")
     print("\n\n")
+
+
+
+if (checkSymmetryOfMatrix and readMatrices == "mixed"):
+
+    t1 = time.time()
+    print("----------------------------------------------------------")
+    print("Checking if either of the matrices A or C are symmetric:  ")
+    print("----------------------------------------------------------")
+    print("\n\n")
+    count = 0
+
+   
+    for A, B, C, H, L in zip(matsA, matsB, matsC, matsH, matsL):
+        print("----------")
+        print(" N = ", casos[count],flush=True)
+        print("----------")
+
+        flag = is_symmetric_sparse(A)
+        print("The matrix A is positive definite!" if flag else "The matrix A is not positive definite!", flush=True)
+        flag = is_symmetric_sparse(C)
+        print("The matrix C is symmetric!" if flag else "The matrix C is unsymmetric!", flush=True)
+        
+        print("\n\n")
+        count+=1
+    
+    
+    t2 = time.time()
+    elapsed_time = t2-t1
+    print("----------------------------------------------------------------------")
+    print(f"Time to check for singularity of AKK : {elapsed_time:.6f} seconds", flush=True)
+    print("----------------------------------------------------------------------")
+    print("\n\n")
+
+
+
+
+if (checkPostiveDefiniteness and readMatrices == "mixed"):
+
+    t1 = time.time()
+    print("-----------------------------------------------------------------------------")
+    print("Checking if either of the matrices A or C are positive or negative definte:  ")
+    print("-----------------------------------------------------------------------------")
+    print("\n\n")
+    count = 0
+
+   
+    for A, B, C, H, L in zip(matsA, matsB, matsC, matsH, matsL):
+        print("----------")
+        print(" N = ", casos[count],flush=True)
+        print("----------")
+        
+        print("Checking positive definiteness of A :------>")
+        checkpositiveDefiniteness(A)
+
+        print("Checking positive definiteness of -C :------>")
+        checkpositiveDefiniteness(-C)
+        
+        print("\n\n")
+        count+=1
+    
+    
+    t2 = time.time()
+    elapsed_time = t2-t1
+    print("----------------------------------------------------------------------")
+    print(f"Time to check for singularity of AKK : {elapsed_time:.6f} seconds", flush=True)
+    print("----------------------------------------------------------------------")
+    print("\n\n")
+
+
+
 
 
 end_time = time.time()

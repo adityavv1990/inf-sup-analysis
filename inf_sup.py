@@ -30,6 +30,12 @@ def is_positive_definite_sparse(matrix):
 
 
 
+def is_symmetric_sparse(matrix):
+    if not isinstance(matrix, csc_matrix):
+        matrix = csc_matrix(matrix)
+    return (matrix != matrix.T).nnz == 0
+
+
 
 def checkpositiveDefiniteness(matM, matH):
     
@@ -52,12 +58,13 @@ def checkpositiveDefiniteness(matM):
     n = min(n1,n2)
 
     eigvals, _ = eigsh(matM, k=1, which='SA', maxiter = n*20, tol = 1e-5, ncv = n*20)  # Smallest eigenvalue
-    print("Minimum eigenvalue of matrix is ", eigvals[0], flush=True)
 
     if (abs(eigvals[0]) > 1e-14):
         print("Matrix is positive definite", flush=True)
+    elif (abs(eigvals[0]) <= 1e-14):
+        print("Matrix is semi positive definite, min eigen value is - ", eigvals[0], flush=True)
     else:
-        print("Matrix is not positive definite", flush=True)
+        print("Matrix is not positive definite, min eigen value is negative -  ", eigvals[0], flush=True)
 
 
 
