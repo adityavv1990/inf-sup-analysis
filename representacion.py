@@ -38,7 +38,7 @@ import numpy as np
 import time
 
 from lector_casos import lector_parametros, lector_unknowns, lector_matrices
-from inf_sup import mixed_infsup, primal_infsup, mixed_infsup_C, primal_infsup_onKerB, mixed_infsup_C2
+from inf_sup import mixed_infsup, primal_infsup, mixed_infsup_C, primal_infsup_onKerB, mixed_infsup_C2, mixed_infsup_gamma
 from inf_sup import evaluateNullSpaceOfMatrix, checkSingularityOfAKK, is_symmetric_sparse, checkpositiveDefiniteness
 import matplotlib.pyplot as plt
 import subprocess
@@ -51,12 +51,13 @@ import subprocess
 evalBetaFromH = False
 evalBetaFromC = False
 evalBetaFromC2 = False
+evalGammaFromC = False
 evalAlphaFromA = False
 evalAlphaFromAonKerB = False
 evalNullSpaceBt = False
 evalSingularityOfAKK = False
-checkSymmetryOfMatrix = True
-checkPostiveDefiniteness = True
+checkSymmetryOfMatrix = False
+checkPostiveDefiniteness = False
 
 readMatrices = 'mixed'
 #readMatrices = 'standard'
@@ -194,6 +195,52 @@ if (evalBetaFromC and readMatrices == 'mixed'):
     print("----------------------------------------------------------------------")
     print("\n\n")
     
+
+
+
+if (evalGammaFromC and readMatrices == 'mixed'): 
+
+    t1 = time.time()
+    
+    print("----------------------------------------------------------")
+    print("Solving the eigenvalue problem: -C x = \lambda L X")
+    print("----------------------------------------------------------")
+    print("\n\n")
+    
+    GammaMinFromC = []
+    GammaMaxFromC = []
+    count = 0
+    
+    for A, B, C, H, L in zip(matsA, matsB, matsC, matsH, matsL):
+        
+        print("----------")
+        print(" N = ", casos[count],flush=True)
+        print("----------")
+
+        if (checkSymmetryOfMatrix):
+            flag = is_symmetric_sparse(C)
+            print("The matrix C is symmetric!" if flag else "The matrix C is unsymmetric!", flush=True)
+        
+        eigenValuesFromC = mixed_infsup_gamma(-C,L)
+        minEigenValue = eigenValuesFromC[0]
+        maxEigenValue = eigenValuesFromC[1]
+        GammaMinFromC.append(minEigenValue)
+        GammaMaxFromC.append(maxEigenValue)
+        print("Maximum EigenValue = ", maxEigenValue, flush=True)
+        print("Minimum EigenValue = ", minEigenValue, flush=True)
+        print("\n\n")
+        count += 1
+
+    np.savetxt(ruta + "/gamma_h_mineig_fromC.txt", np.vstack((num_ecs, GammaMinFromC)))
+    np.savetxt(ruta + "/gamma_h_maxeig_fromC.txt", np.vstack((num_ecs, GammaMaxFromC)))
+
+    t2 = time.time()
+    elapsed_time = t2-t1
+    print("----------------------------------------------------------------------")
+    print(f"Time to solve  -C x = \lambda L x : {elapsed_time:.6f} seconds", flush=True)
+    print("----------------------------------------------------------------------")
+    print("\n\n")
+
 
 
 

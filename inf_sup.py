@@ -435,6 +435,82 @@ def mixed_infsup_C2(matB, matH, matC):
 
 
 
+def mixed_infsup_gamma(matC, matL):
+    """
+    Calcula el valor de la constante inf-sup de la matriz B de una
+    discretización dada. Lo hace a partir de la resolución del problema
+    de autovalor generalizado B^T * C^(-1) * B * x = lambda * H * x. 
+    
+    Nos ayuda en el estudio de la estabilidad de una formulación.
+
+    Parameters
+    ----------
+    matB : scipy.sparse matrix
+        Matriz asociada a la forma bilineal B. De dimensiones (m, n)
+    matH : scipy.sparse matrix
+        Matriz de norma primal. Es simétrica y definida positiva, de
+        dimensiones (n, n)
+    matC : scipy.sparse matrix
+        Matriz asociada a la forma bilineal C. De dimensiones (m, m)
+
+    Returns
+    -------
+    float
+        La raíz cuadrada del menor autovalor del problema de autovalor
+        generalizado B * H^(-1) * B^T * x = lambda * L * x.
+        
+        Si el cálculo no converge, devuelve un mensaje de error de convergencia 
+        ('Error de convergencia').
+
+    """
+
+    start_time = time.time()
+    
+    matC = matC.astype(np.float64)
+    matL = matC.astype(np.float64)
+
+    m,m = matC.shape
+    print("The shape of C = ", matC.shape, flush=True)
+    print("The shape of L = ", matL.shape, flush=True)
+
+    scale_C = norm(matC)
+    print("scaling of matrix C = ", scale_C)
+    matC = matC/scale_C
+
+    try:
+        # Calculamos el menor autovalor
+        eigValues, _ = eigsh(A = matC, k = m-1, M = matL, which = 'SM', tol = 1e-5, ncv = m*20, maxiter = m*100) 
+        eigValuesMax, _ = eigsh(A = matC, k = 1, M = matL, which = 'LM', tol = 1e-5, ncv = m*20, maxiter = m*100)
+        
+        eigValues = np.append(eigValues, eigValuesMax)
+
+
+        rank = (abs(eigValues) > 1e-10).sum()
+
+        print("Eigenvalues of -C x = \lambda L x = ", eigValues, flush=True)
+        print("rank of the matrix  -C x = \lambda L x = ", rank, flush=True)
+        print("Number of zero eigenvalues of B.T Cinv B = ", m-rank, flush=True)
+
+        eigValues = eigValues / scale_C
+
+
+        mineigenValue = eigValues[m-rank]
+        maxeigenValue = eigValues[-1]
+        eigenValues = [mineigenValue, maxeigenValue]
+
+        end_time = time.time()
+        elapsed_time = end_time - start_time
+        print(f"Elapsed time in computing eigenvalues of -C x = \lambda L x {elapsed_time:.6f} seconds", flush=True)
+
+        return eigenValues 
+        
+    except ArpackNoConvergence:
+        
+        return "Error de convergencia"
+
+
+
+
 def primal_infsup(matM, matH, eps = 0.0):
     """
     Calcula el valor de la constante inf-sup de la matriz M de una
