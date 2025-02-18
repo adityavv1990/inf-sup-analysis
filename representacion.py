@@ -65,10 +65,13 @@ readMatrices = 'mixed'
 print("evalBetafromH            is      : ", evalBetaFromH)
 print("evalBetafromC            is      : ", evalBetaFromC)
 print("evalBetafromC2           is      : ", evalBetaFromC2)
+print("evalGammaFromC           is      : ", evalGammaFromC)
 print("evalAlphaFromA           is      : ", evalAlphaFromA)
 print("evalAlphaFromAonKerB     is      : ", evalAlphaFromAonKerB)
 print("evalNullSpaceBt          is      : ", evalNullSpaceBt)
 print("evalSingularityOfAKK     is      : ", evalSingularityOfAKK)
+print("checkSymmetryOfMatrix    is      : ", checkSymmetryOfMatrix)
+print("checkPostiveDefiniteness is      : ", checkPostiveDefiniteness)
 print("reading matrices for forumlation : ", readMatrices)
 
 #################################################################
