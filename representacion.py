@@ -48,7 +48,7 @@ import subprocess
 #################################################################
 # Set flags for the evaluation of different eigenvalue problems
 
-evalBetaFromH = True
+evalBetaFromH = False
 evalBetaFromC = False
 evalBetaFromC2 = False
 evalGammaFromC = False
