@@ -48,7 +48,7 @@ import subprocess
 #################################################################
 # Set flags for the evaluation of different eigenvalue problems
 
-evalBetaFromH = False
+evalBetaFromH = True
 evalBetaFromC = False
 evalBetaFromC2 = False
 evalGammaFromC = False
@@ -77,19 +77,19 @@ print("reading matrices for forumlation : ", readMatrices)
 #################################################################
 
 start_time = time.time()
-ruta_principal = '/mnt/disk-users/aditya/simulations/locking/'
+ruta_principal = '/media/DATOS/aditya/Simulations/locking/'
 #ruta_principal = '/media/DATOS/aditya/Simulations/locking/'
 # Carpeta en la que estan las funciones que voy a utilizar
 sys.path.append(os.path.join(ruta_principal))
 
 
 # Ruta donde se encuentran los problemas varios
-ruta = os.path.join(ruta_principal, "beams/check-positive-definiteness/mixedp1p0")
+ruta = os.path.join(ruta_principal, "3D_stokes/6405_stokes_p2p0_p0_at_v0")
 
 print("Reading from the directory:           ", ruta)
 
 # Lectura de los datos y parámetros
-casos = lector_parametros('clamped.txt', ruta_archivo = ruta)
+casos = lector_parametros('stokes.txt', ruta_archivo = ruta)
 num_ecs = lector_unknowns(ruta_carpetas = ruta)
 
 print("Number of divisions: ", casos)
@@ -122,9 +122,10 @@ if (evalBetaFromH and readMatrices == 'mixed'):
     print("----------------------------------------------------------")
     print("\n\n")
     
-    betaMinFromH = []
-    betaMaxFromH = []
     count = 0
+
+    filenameMin = "beta_h_mineig_fromH.txt"
+    filenameMax = "beta_h_maxeig_fromH.txt"
     
     for A, B, C, H, L in zip(matsA, matsB, matsC, matsH, matsL):
     
@@ -135,16 +136,17 @@ if (evalBetaFromH and readMatrices == 'mixed'):
         eigenValuesFromH = mixed_infsup(B ,H, L)
         minEigenValue = eigenValuesFromH[0]
         maxEigenValue = eigenValuesFromH[1]
-        betaMinFromH.append(minEigenValue)
-        betaMaxFromH.append(maxEigenValue)
         print("Maximum EigenValue = ", maxEigenValue, flush=True)
         print("Minimum EigenValue = ", minEigenValue, flush=True)
         print("\n\n")
+
+        with open(filenameMin, 'a') as f:
+            f.write(f"{casos[count]} {minEigenValue}\n")
+        with open(filenameMax, 'a') as f:
+            f.write(f"{casos[count]} {maxEigenValue}\n")
+        
         count += 1
 
-    np.savetxt(ruta + "/beta_h_mineig_fromH.txt", np.vstack((num_ecs, betaMinFromH)))
-    np.savetxt(ruta + "/beta_h_maxeig_fromH.txt", np.vstack((num_ecs, betaMaxFromH)))
-    
     t2 = time.time()
     elapsed_time = t2-t1
     print("----------------------------------------------------------------------")
@@ -163,9 +165,10 @@ if (evalBetaFromC and readMatrices == 'mixed'):
     print("Solving the eigenvalue problem: B.T C^{-1}B x = \lambda H X")
     print("----------------------------------------------------------")
     print("\n\n")
+
+    filenameMin = "beta_h_mineig_fromC.txt"
+    filenameMax = "beta_h_maxeig_fromC.txt"
     
-    betaMinFromC = []
-    betaMaxFromC = []
     count = 0
     
     for A, B, C, H, L in zip(matsA, matsB, matsC, matsH, matsL):
@@ -181,15 +184,16 @@ if (evalBetaFromC and readMatrices == 'mixed'):
         eigenValuesFromC = mixed_infsup_C(B, H, C)
         minEigenValue = eigenValuesFromC[0]
         maxEigenValue = eigenValuesFromC[1]
-        betaMinFromC.append(minEigenValue)
-        betaMaxFromC.append(maxEigenValue)
         print("Maximum EigenValue = ", maxEigenValue, flush=True)
         print("Minimum EigenValue = ", minEigenValue, flush=True)
         print("\n\n")
-        count += 1
 
-    np.savetxt(ruta + "/beta_h_mineig_fromC.txt", np.vstack((num_ecs, betaMinFromC)))
-    np.savetxt(ruta + "/beta_h_maxeig_fromC.txt", np.vstack((num_ecs, betaMaxFromC)))
+        with open(filenameMin, 'a') as f:
+            f.write(f"{casos[count]} {minEigenValue}\n")
+        with open(filenameMax, 'a') as f:
+            f.write(f"{casos[count]} {maxEigenValue}\n")
+
+        count += 1
 
     t2 = time.time()
     elapsed_time = t2-t1
@@ -209,9 +213,9 @@ if (evalGammaFromC and readMatrices == 'mixed'):
     print("Solving the eigenvalue problem: -C x = \lambda L X")
     print("----------------------------------------------------------")
     print("\n\n")
-    
-    GammaMinFromC = []
-    GammaMaxFromC = []
+
+    filenameMin = "gamma_h_mineig_fromC.txt"
+    filenameMax = "gamma_h_maxeig_fromC.txt"
     count = 0
     
     for A, B, C, H, L in zip(matsA, matsB, matsC, matsH, matsL):
@@ -227,16 +231,17 @@ if (evalGammaFromC and readMatrices == 'mixed'):
         eigenValuesFromC = mixed_infsup_gamma(-C,L)
         minEigenValue = eigenValuesFromC[0]
         maxEigenValue = eigenValuesFromC[1]
-        GammaMinFromC.append(minEigenValue)
-        GammaMaxFromC.append(maxEigenValue)
         print("Maximum EigenValue = ", maxEigenValue, flush=True)
         print("Minimum EigenValue = ", minEigenValue, flush=True)
         print("\n\n")
+
+        with open(filenameMin, 'a') as f:
+            f.write(f"{casos[count]} {minEigenValue}\n")
+        with open(filenameMax, 'a') as f:
+            f.write(f"{casos[count]} {maxEigenValue}\n")
+        
         count += 1
-
-    np.savetxt(ruta + "/gamma_h_mineig_fromC.txt", np.vstack((num_ecs, GammaMinFromC)))
-    np.savetxt(ruta + "/gamma_h_maxeig_fromC.txt", np.vstack((num_ecs, GammaMaxFromC)))
-
+    
     t2 = time.time()
     elapsed_time = t2-t1
     print("----------------------------------------------------------------------")
@@ -255,8 +260,8 @@ if (evalBetaFromC2 and readMatrices == 'mixed'):
     print("----------------------------------------------------------")
     print("\n\n")
     
-    betaMinFromC2 = []
-    betaMaxFromC2 = []
+    filenameMin = "beta_h_mineig_fromC2.txt"
+    filenameMax = "beta_h_maxeig_fromC2.txt"
     count = 0
     
     for A, B, C, H, L in zip(matsA, matsB, matsC, matsH, matsL):
@@ -272,15 +277,15 @@ if (evalBetaFromC2 and readMatrices == 'mixed'):
         eigenValuesFromC2 = mixed_infsup_C2(B, H, C)
         minEigenValue = eigenValuesFromC2[0]
         maxEigenValue = eigenValuesFromC2[1]
-        betaMinFromC2.append(minEigenValue)
-        betaMaxFromC2.append(maxEigenValue)
         print("Maximum EigenValue = ", maxEigenValue, flush=True)
         print("Minimum EigenValue = ", minEigenValue, flush=True)
         print("\n\n")
-        count += 1
 
-    np.savetxt(ruta + "/beta_h_mineig_fromC2.txt", np.vstack((num_ecs, betaMinFromC2)))
-    np.savetxt(ruta + "/beta_h_maxeig_fromC2.txt", np.vstack((num_ecs, betaMaxFromC2)))
+        with open(filenameMin, 'a') as f:
+            f.write(f"{casos[count]} {minEigenValue}\n")
+        with open(filenameMax, 'a') as f:
+            f.write(f"{casos[count]} {maxEigenValue}\n")
+        count += 1
 
     t2 = time.time()
     elapsed_time = t2-t1
@@ -299,8 +304,8 @@ if (evalAlphaFromA):
     print("----------------------------------------------------------")
     print("\n\n")
     
-    alphaMinFromA = []
-    alphaMaxFromA = []
+    filenameMin = "alpha_h_mineig_fromA.txt"
+    filenameMax = "alpha_h_maxeig_fromA.txt"
     count = 0
 
     for A, H in zip(matsA, matsH):
@@ -316,16 +321,17 @@ if (evalAlphaFromA):
 
         minEigenValue = eigenValuesFromA[0]
         maxEigenValue = eigenValuesFromA[1]
-        alphaMinFromA.append(minEigenValue)
-        alphaMaxFromA.append(maxEigenValue)
         print("Maximum EigenValue = ", maxEigenValue, flush=True)
         print("Minimum EigenValue A = ", minEigenValue, flush=True)
         print("\n\n")
+
+        with open(filenameMin, 'a') as f:
+            f.write(f"{casos[count]} {minEigenValue}\n")
+        with open(filenameMax, 'a') as f:
+            f.write(f"{casos[count]} {maxEigenValue}\n")
+
         count += 1
     
-    np.savetxt(ruta + "/alpha_h_mineig_fromA.txt", np.vstack((num_ecs, alphaMinFromA)))
-    np.savetxt(ruta + "/alpha_h_maxeig_fromA.txt", np.vstack((num_ecs, alphaMaxFromA)))
-
     t2 = time.time()
     elapsed_time = t2-t1
     print("----------------------------------------------------------------------")
@@ -344,8 +350,8 @@ if (evalAlphaFromAonKerB and readMatrices == 'mixed'):
     print("----------------------------------------------------------")
     print("\n\n")
 
-    alphaMaxFromAonkerB = []
-    alphaMinFromAonkerB = []
+    filenameMin = "alpha_h_mineig_fromAOnKerB.txt"
+    filenameMax = "alpha_h_maxeig_fromAOnKerB.txt"
     count = 0
    
     for A, B, C, H, L in zip(matsA, matsB, matsC, matsH, matsL):
@@ -357,16 +363,15 @@ if (evalAlphaFromAonKerB and readMatrices == 'mixed'):
 
         minEigenValue = eigenValuesFromAonkerB[0]
         maxEigenValue = eigenValuesFromAonkerB[1]
-        alphaMinFromAonkerB.append(minEigenValue)
-        alphaMaxFromAonkerB.append(maxEigenValue)
         print("Maximum EigenValue = ", maxEigenValue, flush=True)
         print("Minimum EigenValue = ", minEigenValue, flush=True)
         print("\n\n")
-        count+=1
-    
-    np.savetxt(ruta + "/alpha_h_mineig_fromAOnKerB.txt", np.vstack((num_ecs, alphaMinFromAonkerB)))
-    np.savetxt(ruta + "/alpha_h_maxeig_fromAOnKerB.txt", np.vstack((num_ecs, alphaMaxFromAonkerB)))
 
+        with open(filenameMin, 'a') as f:
+            f.write(f"{casos[count]} {minEigenValue}\n")
+        with open(filenameMax, 'a') as f:
+            f.write(f"{casos[count]} {maxEigenValue}\n")
+        count+=1
     
     t2 = time.time()
     elapsed_time = t2-t1
