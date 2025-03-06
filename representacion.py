@@ -84,7 +84,7 @@ sys.path.append(os.path.join(ruta_principal))
 
 
 # Ruta donde se encuentran los problemas varios
-ruta = os.path.join(ruta_principal, "3D_stokes/6405_stokes_p2p0_p0_at_v0")
+ruta = os.path.join(ruta_principal, "3D_stokes/6406_stokes_p2p1_L2norm_withvy_p0atV0_uyuz")
 
 print("Reading from the directory:           ", ruta)
 
@@ -124,9 +124,12 @@ if (evalBetaFromH and readMatrices == 'mixed'):
     
     count = 0
 
-    filenameMin = "beta_h_mineig_fromH.txt"
-    filenameMax = "beta_h_maxeig_fromH.txt"
-    
+    filenameMin = ruta + "/beta_h_mineig_fromH.txt"
+    filenameMax = ruta + "/beta_h_maxeig_fromH.txt"
+
+    open(filenameMin, "w").close()
+    open(filenameMax, "w").close()
+
     for A, B, C, H, L in zip(matsA, matsB, matsC, matsH, matsL):
     
         print("----------")
@@ -140,10 +143,13 @@ if (evalBetaFromH and readMatrices == 'mixed'):
         print("Minimum EigenValue = ", minEigenValue, flush=True)
         print("\n\n")
 
+        N = casos[count]
         with open(filenameMin, 'a') as f:
-            f.write(f"{casos[count]} {minEigenValue}\n")
+            f.write(f"{float(N[0])} {minEigenValue}\n")
+            f.flush()
         with open(filenameMax, 'a') as f:
-            f.write(f"{casos[count]} {maxEigenValue}\n")
+            f.write(f"{float(N[0])} {maxEigenValue}\n")
+            f.flush()
         
         count += 1
 
@@ -166,9 +172,12 @@ if (evalBetaFromC and readMatrices == 'mixed'):
     print("----------------------------------------------------------")
     print("\n\n")
 
-    filenameMin = "beta_h_mineig_fromC.txt"
-    filenameMax = "beta_h_maxeig_fromC.txt"
+    filenameMin = ruta + "beta_h_mineig_fromC.txt"
+    filenameMax = ruta + "beta_h_maxeig_fromC.txt"
     
+    open(filenameMin, "w").close()
+    open(filenameMax, "w").close()
+            
     count = 0
     
     for A, B, C, H, L in zip(matsA, matsB, matsC, matsH, matsL):
@@ -188,10 +197,13 @@ if (evalBetaFromC and readMatrices == 'mixed'):
         print("Minimum EigenValue = ", minEigenValue, flush=True)
         print("\n\n")
 
+        N = casos[count]
         with open(filenameMin, 'a') as f:
-            f.write(f"{casos[count]} {minEigenValue}\n")
+            f.write(f"{float(N[0])} {minEigenValue}\n")
+            f.flush()
         with open(filenameMax, 'a') as f:
-            f.write(f"{casos[count]} {maxEigenValue}\n")
+            f.write(f"{float(N[0])} {maxEigenValue}\n")
+            f.flush()
 
         count += 1
 
@@ -214,8 +226,12 @@ if (evalGammaFromC and readMatrices == 'mixed'):
     print("----------------------------------------------------------")
     print("\n\n")
 
-    filenameMin = "gamma_h_mineig_fromC.txt"
-    filenameMax = "gamma_h_maxeig_fromC.txt"
+    filenameMin = ruta + "gamma_h_mineig_fromC.txt"
+    filenameMax = ruta + "gamma_h_maxeig_fromC.txt"
+
+    open(filenameMin, "w").close()
+    open(filenameMax, "w").close()
+
     count = 0
     
     for A, B, C, H, L in zip(matsA, matsB, matsC, matsH, matsL):
@@ -235,10 +251,13 @@ if (evalGammaFromC and readMatrices == 'mixed'):
         print("Minimum EigenValue = ", minEigenValue, flush=True)
         print("\n\n")
 
+        N = casos[count]
         with open(filenameMin, 'a') as f:
-            f.write(f"{casos[count]} {minEigenValue}\n")
+            f.write(f"{float(N[0])} {minEigenValue}\n")
+            f.flush()
         with open(filenameMax, 'a') as f:
-            f.write(f"{casos[count]} {maxEigenValue}\n")
+            f.write(f"{float(N[0])} {maxEigenValue}\n")
+            f.flush()
         
         count += 1
     
@@ -260,8 +279,12 @@ if (evalBetaFromC2 and readMatrices == 'mixed'):
     print("----------------------------------------------------------")
     print("\n\n")
     
-    filenameMin = "beta_h_mineig_fromC2.txt"
-    filenameMax = "beta_h_maxeig_fromC2.txt"
+    filenameMin = ruta + "beta_h_mineig_fromC2.txt"
+    filenameMax = ruta + "beta_h_maxeig_fromC2.txt"
+
+    open(filenameMin, "w").close()
+    open(filenameMax, "w").close()
+
     count = 0
     
     for A, B, C, H, L in zip(matsA, matsB, matsC, matsH, matsL):
@@ -281,11 +304,14 @@ if (evalBetaFromC2 and readMatrices == 'mixed'):
         print("Minimum EigenValue = ", minEigenValue, flush=True)
         print("\n\n")
 
+        N = casos[count]
         with open(filenameMin, 'a') as f:
-            f.write(f"{casos[count]} {minEigenValue}\n")
+            f.write(f"{float(N[0])} {minEigenValue}\n")
+            f.flush()
         with open(filenameMax, 'a') as f:
-            f.write(f"{casos[count]} {maxEigenValue}\n")
-        count += 1
+            f.write(f"{float(N[0])} {maxEigenValue}\n")
+            f.flush()
+        
 
     t2 = time.time()
     elapsed_time = t2-t1
@@ -304,8 +330,12 @@ if (evalAlphaFromA):
     print("----------------------------------------------------------")
     print("\n\n")
     
-    filenameMin = "alpha_h_mineig_fromA.txt"
-    filenameMax = "alpha_h_maxeig_fromA.txt"
+    filenameMin = ruta + "alpha_h_mineig_fromA.txt"
+    filenameMax = ruta + "alpha_h_maxeig_fromA.txt"
+
+    open(filenameMin, "w").close()
+    open(filenameMax, "w").close()
+
     count = 0
 
     for A, H in zip(matsA, matsH):
@@ -325,11 +355,14 @@ if (evalAlphaFromA):
         print("Minimum EigenValue A = ", minEigenValue, flush=True)
         print("\n\n")
 
+        N = casos[count]
         with open(filenameMin, 'a') as f:
-            f.write(f"{casos[count]} {minEigenValue}\n")
+            f.write(f"{float(N[0])} {minEigenValue}\n")
+            f.flush()
         with open(filenameMax, 'a') as f:
-            f.write(f"{casos[count]} {maxEigenValue}\n")
-
+            f.write(f"{float(N[0])} {maxEigenValue}\n")
+            f.flush()
+        
         count += 1
     
     t2 = time.time()
@@ -350,8 +383,12 @@ if (evalAlphaFromAonKerB and readMatrices == 'mixed'):
     print("----------------------------------------------------------")
     print("\n\n")
 
-    filenameMin = "alpha_h_mineig_fromAOnKerB.txt"
-    filenameMax = "alpha_h_maxeig_fromAOnKerB.txt"
+    filenameMin = ruta + "alpha_h_mineig_fromAOnKerB.txt"
+    filenameMax = ruta + "alpha_h_maxeig_fromAOnKerB.txt"
+
+    open(filenameMin, "w").close()
+    open(filenameMax, "w").close()
+
     count = 0
    
     for A, B, C, H, L in zip(matsA, matsB, matsC, matsH, matsL):
@@ -367,10 +404,14 @@ if (evalAlphaFromAonKerB and readMatrices == 'mixed'):
         print("Minimum EigenValue = ", minEigenValue, flush=True)
         print("\n\n")
 
+        N = casos[count]
         with open(filenameMin, 'a') as f:
-            f.write(f"{casos[count]} {minEigenValue}\n")
+            f.write(f"{float(N[0])} {minEigenValue}\n")
+            f.flush()
         with open(filenameMax, 'a') as f:
-            f.write(f"{casos[count]} {maxEigenValue}\n")
+            f.write(f"{float(N[0])} {maxEigenValue}\n")
+            f.flush()
+        
         count+=1
     
     t2 = time.time()
