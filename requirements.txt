@@ -7,13 +7,9 @@ matplotlib==3.9.4
 mpi4py==4.0.3
 numpy==2.0.2
 packaging==24.2
-petsc==3.22.4
-petsc4py==3.22.4
 pillow==11.1.0
 pyparsing==3.2.1
 python-dateutil==2.9.0.post0
 scipy==1.13.1
 six==1.17.0
-slepc==3.22.2
-slepc4py==3.22.2
 zipp==3.21.0
