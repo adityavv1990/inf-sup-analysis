@@ -119,7 +119,7 @@ def evaluateNullSpaceOfMatrix(matX):
 
 
 
-def mixed_infsup(matB, matH, matL):
+def mixed_infsup(matB, matH, matA, matL):
     """
     Calcula el valor de la constante inf-sup de la matriz B de una
     discretización dada. Lo hace a partir de la resolución del problema
@@ -154,6 +154,7 @@ def mixed_infsup(matB, matH, matL):
     matB = matB.astype(np.float64)
     matH = matH.astype(np.float64)
     matL = matL.astype(np.float64)
+    matA = matA.astype(np.float64)
 
     m,n = matB.shape
     minDim = min(m,n)
@@ -161,21 +162,22 @@ def mixed_infsup(matB, matH, matL):
     print("   The shape of H = ", matH.shape, flush=True)
     print("   The shape of L = ", matL.shape, flush=True)
 
-#    dimKernel = evaluateNullSpaceOfMatrix(matB.T)
+    #dimKernel = evaluateNullSpaceOfMatrix(matB.T)
 
-    Bdense = matB.toarray()
-    Hdense = matH.toarray()
-    Ldense = matL.toarray()
+    # Bdense = matB.toarray()
+    # Hdense = matH.toarray()
+    # Ldense = matL.toarray()
+    # Adense = matA.toarray()
 
-    Hinv = np.linalg.inv(Hdense)
-    BHinvBT = Bdense @ Hinv @ Bdense.T
+    # Hinv = np.linalg.inv(Hdense)
+    # BHinvBT = Bdense @ Hinv @ Bdense.T
 
     # We will evaluate the rank of the matrix B*H^(-1)*B^T
-    rank = np.linalg.matrix_rank(BHinvBT)
-    m,m = BHinvBT.shape
+    #rank = np.linalg.matrix_rank(BHinvBT)
+    #m,m = BHinvBT.shape
 
-    print("Dimension of the square matrix B*H^(-1)*B^T = ", m, flush=True)
-    print("Rank of B*H^(-1)*B^T = ", rank, flush=True)
+    #print("Dimension of the square matrix B*H^(-1)*B^T = ", m, flush=True)
+    #print("Rank of B*H^(-1)*B^T = ", rank, flush=True)
 
 
 
@@ -203,20 +205,20 @@ def mixed_infsup(matB, matH, matL):
     
     try:
         # Calculamos el menor autovalor
-        delta = 1e-6
+        delta = 1e-12
         eigValues, _ = eigsh(A = operator, k = m-1, M = matL, which = 'SA', tol=1e-5)
         eigValueMax, _ = eigsh(A = operator, k = 1, M = matL, which = 'LA', tol=1e-5)
 
         eigValues = np.append(eigValues, eigValueMax)
-        #rank = (abs(eigValues) < delta).sum()
+        rank = (abs(eigValues) < delta).sum()
 
         
         print("tolerance is             :", delta)
         print("Eigenvalues of B Hinv B.T= ", eigValues, flush=True)
-        print("Number of zero eigenvalues of B Hinv B.T = ", m-rank, flush=True)
+        print("Number of zero eigenvalues of B Hinv B.T = ", rank, flush=True)
         print("rank of the matrix B H^-1 B.T= ", rank, flush=True)
 
-        mineigenValue = eigValues[m-rank] # the first non-zero eigenvalue
+        mineigenValue = eigValues[rank] # the first non-zero eigenvalue
         maxeigenValue = eigValues[-1]
         eigenValues = [mineigenValue, maxeigenValue]
 
@@ -272,9 +274,9 @@ def mixed_infsup_C(matB, matH, matC):
     print("The shape of H = ", matH.shape, flush=True)
     print("The shape of C = ", matC.shape, flush=True)
 
-    scale_C = norm(matC)
-    print("scaling of matrix C = ", scale_C)
-    matC = matC/scale_C
+    #scale_C = 1e-5
+    #print("scaling of matrix C = ", scale_C)
+    #matC = matC/scale_C
 
     #dimKernel = evaluateNullSpaceOfMatrix(matC)    
 
@@ -314,7 +316,7 @@ def mixed_infsup_C(matB, matH, matC):
         print("rank of the matrix B.T Cinv B= ", rank, flush=True)
         print("Number of zero eigenvalues of B.T Cinv B = ", n-rank, flush=True)
 
-        eigValues = eigValues / scale_C
+     #   eigValues = eigValues / scale_C
 
 
         mineigenValue = eigValues[n-rank]
@@ -332,6 +334,208 @@ def mixed_infsup_C(matB, matH, matC):
         return "Error de convergencia"
 
 
+
+
+def mixed_infsup_stabilized_U(matA, matB, matC, matH):
+    """
+    Calculates the minimum and maximum eigenvalue of the generalized eigenvalue problem
+    (A + B^T * C^(-1) * B ) x = lambda * H * x.
+    Parameters
+    ----------
+    matA : scipy.sparse matrix
+        Matrix associated with the bilinear form A. Dimensions (n, n)
+    matB : scipy.sparse matrix
+        Matrix associated with the bilinear form B. Dimensions (m, n)
+    matC : scipy.sparse matrix
+        Matrix associated with the bilinear form C. Dimensions (m, m)
+    matH : scipy.sparse matrix
+        Primal norm matrix. It is symmetric and positive definite, with
+        dimensions (n, n)
+
+    Returns
+    -------
+    float [2]
+        Returns the minimum non-zero and maximum eigenvalue of the generalized eigenvalue
+        problem (A + B^T * C^(-1) * B ) x = lambda * H * x.
+        
+        If the calculation does not converge, it returns a convergence error message 
+        ('Convergence error').
+
+    """
+
+    start_time = time.time()
+    
+    matA = matA.astype(np.float64)
+    matB = matB.astype(np.float64)
+    matC = matC.astype(np.float64)
+    matH = matH.astype(np.float64)
+
+    m,n = matB.shape
+    print("The shape of A = ", matA.shape, flush=True)
+    print("The shape of B = ", matB.shape, flush=True)
+    print("The shape of C = ", matC.shape, flush=True)
+    print("The shape of H = ", matH.shape, flush=True)
+
+    #scale_C = norm(matC)
+    #print("scaling of matrix C = ", scale_C)
+    #matC = matC/scale_C
+
+    #dimKernel = evaluateNullSpaceOfMatrix(matC)    
+
+    def operador_AplusBtCinvB(A, B, C):
+      
+        # Get the sizes of matrices B and C
+        m, n = B.shape
+        assert C.shape == (m, m), "C must be a square matrix of dimension compatible with B"
+        
+        # Function to define our operator
+        def matvec(x):                         
+            # Primero B^T * x
+            Bx = B @ x
+            # Ahora resolvemos H^(-1) * B^T * x
+            CinvBx = spsolve(-C, Bx)
+            # B * H^(-1) * B^T * x
+            BtCinvBx = B.T @ CinvBx
+
+            return BtCinvBx + A @ x
+        
+        # It is necessary to provide the size of the linear operator
+        shape = (n, n)
+    
+        return LinearOperator(shape, matvec=matvec)
+    
+    operator = operador_AplusBtCinvB(matA, matB, matC)
+    
+    try:
+        # Calculamos el menor autovalor
+        eigValues, _ = eigsh(A = operator, k = n-1, M = matH, which = 'SM', tol = 1e-9)
+        eigValuesMax, _ = eigsh(A = operator, k = 1, M = matH, which = 'LM', tol = 1e-9)
+        
+        eigValues = np.append(eigValues, eigValuesMax)
+        eigValues = eigValues - 1.0
+
+        rank = (abs(eigValues) > 1e-5).sum()
+
+        print("Eigenvalues of A + B.T Cinv B = ", eigValues, flush=True)
+        print("rank of the matrix A + B.T Cinv B= ", rank, flush=True)
+        print("Number of zero eigenvalues of A + B.T Cinv B = ", n-rank, flush=True)
+
+        mineigenValue = eigValues[n-rank]
+        maxeigenValue = eigValues[-1]
+        eigenValues = [mineigenValue, maxeigenValue]
+
+        end_time = time.time()
+        elapsed_time = end_time - start_time
+        print(f"Elapsed time in computing eigenvalues of A + B^T Cinv B {elapsed_time:.6f} seconds", flush=True)
+
+        return eigenValues 
+        
+    except ArpackNoConvergence:
+        
+        return "Error de convergencia"
+
+
+
+
+def mixed_infsup_stabilized_P(matA, matB, matC, matL):
+    """
+    Calculates the minimum and maximum eigenvalue of the generalized eigenvalue problem
+    (B A^{-1} B^T + C) x = lambda * L * x.
+    Parameters
+    ----------
+    matA : scipy.sparse matrix
+        Matrix associated with the bilinear form A. Dimensions (n, n)
+    matB : scipy.sparse matrix
+        Matrix associated with the bilinear form B. Dimensions (m, n)
+    matC : scipy.sparse matrix
+        Matrix associated with the bilinear form C. Dimensions (m, m)
+    matL : scipy.sparse matrix
+        Dual norm matrix. It is symmetric and positive definite, with
+        dimensions (m, m)
+
+    Returns
+    -------
+    float [2]
+        Returns the minimum non-zero and maximum eigenvalue of the generalized eigenvalue
+        problem (B A^{-1} B^T + C ) x = lambda * L * x.
+        
+        If the calculation does not converge, it returns a convergence error message 
+        ('Convergence error').
+
+    """
+
+    start_time = time.time()
+    
+    matA = matA.astype(np.float64)
+    matB = matB.astype(np.float64)
+    matC = matC.astype(np.float64)
+    matL = matL.astype(np.float64)
+
+    m,n = matB.shape
+    print("The shape of A = ", matA.shape, flush=True)
+    print("The shape of B = ", matB.shape, flush=True)
+    print("The shape of C = ", matC.shape, flush=True)
+    print("The shape of L = ", matL.shape, flush=True)
+
+    #scale_C = norm(matC)
+    #print("scaling of matrix C = ", scale_C)
+    #matC = matC/scale_C
+
+    #dimKernel = evaluateNullSpaceOfMatrix(matC)    
+
+    def operador_CplusBAinvBt(A, B, C):
+      
+        # Get the sizes of matrices B and C
+        m, n = B.shape
+        assert C.shape == (m, m), "C must be a square matrix of dimension compatible with B"
+        
+        # Function to define our operator
+        def matvec(x):                         
+            # Primero B^T * x
+            Btx = B.T @ x
+            # Ahora resolvemos H^(-1) * B^T * x
+            AinvBtx = spsolve(A, Btx)
+            # B * H^(-1) * B^T * x
+            BAinvBtx = B @ AinvBtx
+
+            return BAinvBtx - C @ x
+        
+        # Es necesario proporcionar el tamaño del operador lineal
+        shape = (m, m)
+    
+        return LinearOperator(shape, matvec=matvec)
+    
+    operator = operador_CplusBAinvBt(matA, matB, matC)
+    
+    try:
+        # Calculamos el menor autovalor
+        eigValues, _ = eigsh(A = operator, k = m-1, M = matL, which = 'SM', tol = 1e-9)
+        eigValuesMax, _ = eigsh(A = operator, k = 1, M = matL, which = 'LM', tol = 1e-9)
+        
+        eigValues = np.append(eigValues, eigValuesMax)
+
+
+        rank = (abs(eigValues) > 1e-10).sum()
+
+        print("Eigenvalues of B A^{-1} B^T + C = ", eigValues, flush=True)
+        print("rank of the matrix B A^{-1} B^T + C= ", rank, flush=True)
+        print("Number of zero eigenvalues of B A^{-1} B^T + C = ", n-rank, flush=True)
+
+        mineigenValue = eigValues[m-rank]
+        maxeigenValue = eigValues[-1]
+        eigenValues = [mineigenValue, maxeigenValue]
+
+        end_time = time.time()
+        elapsed_time = end_time - start_time
+        print(f"Elapsed time in computing eigenvalues of B A^{-1} B^T + C {elapsed_time:.6f} seconds", flush=True)
+
+        return eigenValues 
+        
+    except ArpackNoConvergence:
+        
+        return "Error de convergencia"
+    
+    
 
 
 def mixed_infsup_C2(matB, matH, matC):

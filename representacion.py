@@ -30,6 +30,7 @@ Created on Wed Oct  9 21:05:16 2024
 
 import sys
 import os
+# Comment these lines if you want to use all the cores
 os.environ["MKL_NUM_THREADS"] = "8"
 os.environ["NUMEXPR_NUM_THREADS"] = "8"
 os.environ["OMP_NUM_THREADS"] = "8"
@@ -39,6 +40,7 @@ import time
 
 from lector_casos import lector_parametros, lector_unknowns, lector_matrices
 from inf_sup import mixed_infsup, primal_infsup, mixed_infsup_C, primal_infsup_onKerB, mixed_infsup_C2, mixed_infsup_gamma
+from inf_sup import mixed_infsup_stabilized_U, mixed_infsup_stabilized_P
 from inf_sup import evaluateNullSpaceOfMatrix, checkSingularityOfAKK, is_symmetric_sparse, checkpositiveDefiniteness
 import matplotlib.pyplot as plt
 import subprocess
@@ -51,6 +53,8 @@ import subprocess
 evalBetaFromH = False
 evalBetaFromC = False
 evalBetaFromC2 = False
+evalBetaStabilizedU = False
+evalBetaStabilizedP = False
 evalGammaFromC = False
 evalAlphaFromA = False
 evalAlphaFromAonKerB = False
@@ -65,6 +69,8 @@ readMatrices = 'mixed'
 print("evalBetafromH            is      : ", evalBetaFromH)
 print("evalBetafromC            is      : ", evalBetaFromC)
 print("evalBetafromC2           is      : ", evalBetaFromC2)
+print("evalBetaStabilizedU      is      : ", evalBetaStabilizedU)
+print("evalBetaStabilizedP      is      : ", evalBetaStabilizedP)
 print("evalGammaFromC           is      : ", evalGammaFromC)
 print("evalAlphaFromA           is      : ", evalAlphaFromA)
 print("evalAlphaFromAonKerB     is      : ", evalAlphaFromAonKerB)
@@ -84,7 +90,7 @@ sys.path.append(os.path.join(ruta_principal))
 
 
 # Ruta donde se encuentran los problemas varios
-ruta = os.path.join(ruta_principal, "3D_stokes/6406_stokes_p2p1_L2norm_withvy_p0atV0_uyuz")
+ruta = os.path.join(ruta_principal, "3D_stokes/6406_stokes_p2p1/")
 
 print("Reading from the directory:           ", ruta)
 
@@ -136,7 +142,7 @@ if (evalBetaFromH and readMatrices == 'mixed'):
         print(" N = ", casos[count],flush=True)
         print("----------")
 
-        eigenValuesFromH = mixed_infsup(B ,H, L)
+        eigenValuesFromH = mixed_infsup(B ,H, A, L)
         minEigenValue = eigenValuesFromH[0]
         maxEigenValue = eigenValuesFromH[1]
         print("Maximum EigenValue = ", maxEigenValue, flush=True)
@@ -214,6 +220,114 @@ if (evalBetaFromC and readMatrices == 'mixed'):
     print("----------------------------------------------------------------------")
     print("\n\n")
     
+
+
+
+if (evalBetaStabilizedU and readMatrices == 'mixed'): 
+
+    t1 = time.time()
+    
+    print("----------------------------------------------------------")
+    print("Solving the eigenvalue problem: (A + B.T C^{-1}B ) x = \lambda H X")
+    print("----------------------------------------------------------")
+    print("\n\n")
+
+    filenameMin = ruta + "beta_h_mineig_fromCStabU.txt"
+    filenameMax = ruta + "beta_h_maxeig_fromCStabU.txt"
+    
+    open(filenameMin, "w").close()
+    open(filenameMax, "w").close()
+            
+    count = 0
+    
+    for A, B, C, H, L in zip(matsA, matsB, matsC, matsH, matsL):
+        
+        print("----------")
+        print(" N = ", casos[count],flush=True)
+        print("----------")
+
+        if (checkSymmetryOfMatrix):
+            flag = is_symmetric_sparse(C)
+            print("The matrix C is symmetric!" if flag else "The matrix C is unsymmetric!", flush=True)
+        
+        eigenValuesFromC = mixed_infsup_stabilized_U(A, B, C, H)
+        minEigenValue = eigenValuesFromC[0]
+        maxEigenValue = eigenValuesFromC[1]
+        print("Maximum EigenValue = ", maxEigenValue, flush=True)
+        print("Minimum EigenValue = ", minEigenValue, flush=True)
+        print("\n\n")
+
+        N = casos[count]
+        with open(filenameMin, 'a') as f:
+            f.write(f"{float(N[0])} {minEigenValue}\n")
+            f.flush()
+        with open(filenameMax, 'a') as f:
+            f.write(f"{float(N[0])} {maxEigenValue}\n")
+            f.flush()
+
+        count += 1
+
+    t2 = time.time()
+    elapsed_time = t2-t1
+    print("----------------------------------------------------------------------")
+    print(f"Time to solve (A + B.T C^{-1}B ) x = \lambda H x : {elapsed_time:.6f} seconds", flush=True)
+    print("----------------------------------------------------------------------")
+    print("\n\n")
+    
+
+
+
+if (evalBetaStabilizedP and readMatrices == 'mixed'): 
+
+    t1 = time.time()
+    
+    print("----------------------------------------------------------")
+    print("Solving the eigenvalue problem: (B A^{-1} B^T + C)x = \lambda L X")
+    print("----------------------------------------------------------")
+    print("\n\n")
+
+    filenameMin = ruta + "beta_h_mineig_fromCStabP.txt"
+    filenameMax = ruta + "beta_h_maxeig_fromCStabP.txt"
+    
+    open(filenameMin, "w").close()
+    open(filenameMax, "w").close()
+            
+    count = 0
+    
+    for A, B, C, H, L in zip(matsA, matsB, matsC, matsH, matsL):
+        
+        print("----------")
+        print(" N = ", casos[count],flush=True)
+        print("----------")
+
+        if (checkSymmetryOfMatrix):
+            flag = is_symmetric_sparse(C)
+            print("The matrix C is symmetric!" if flag else "The matrix C is unsymmetric!", flush=True)
+        
+        eigenValuesFromC = mixed_infsup_stabilized_P(A, B, C, L)
+        minEigenValue = eigenValuesFromC[0]
+        maxEigenValue = eigenValuesFromC[1]
+        print("Maximum EigenValue = ", maxEigenValue, flush=True)
+        print("Minimum EigenValue = ", minEigenValue, flush=True)
+        print("\n\n")
+
+        N = casos[count]
+        with open(filenameMin, 'a') as f:
+            f.write(f"{float(N[0])} {minEigenValue}\n")
+            f.flush()
+        with open(filenameMax, 'a') as f:
+            f.write(f"{float(N[0])} {maxEigenValue}\n")
+            f.flush()
+
+        count += 1
+
+    t2 = time.time()
+    elapsed_time = t2-t1
+    print("----------------------------------------------------------------------")
+    print(f"Time to solve  (B A^{-1} B^T + C) x = \lambda L x : {elapsed_time:.6f} seconds", flush=True)
+    print("----------------------------------------------------------------------")
+    print("\n\n")
+
 
 
 
@@ -566,5 +680,5 @@ print(f"Total time of execution: {elapsed_time:.6f} seconds", flush=True)
 print("----------------------------------------------------------")
 print("\n\n")
 
-command = "cp output.txt " + ruta
+command = "cp output4.txt " + ruta
 result = subprocess.run(command, shell=True, text=True, capture_output=True)
