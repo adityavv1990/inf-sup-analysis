@@ -26,6 +26,7 @@ Created on Wed Oct  9 21:05:16 2024
 import sys
 import os
 # Comment these lines if you want to use all the cores
+# for scipy, somehow 8 cores perform optimally in hilbert
 os.environ["MKL_NUM_THREADS"] = "8"
 os.environ["NUMEXPR_NUM_THREADS"] = "8"
 os.environ["OMP_NUM_THREADS"] = "8"
@@ -35,7 +36,7 @@ import time
 
 from lector_casos import lector_parametros, lector_unknowns, lector_matrices
 # from inf_sup import mixed_infsup, primal_infsup, mixed_infsup_C, primal_infsup_onKerB, mixed_infsup_C2, mixed_infsup_gamma
-from wrapper import mixed_infsup
+from inf_sup import mixed_infsup
 # from inf_sup import mixed_infsup_stabilized_U, mixed_infsup_stabilized_P
 # from inf_sup import evaluateNullSpaceOfMatrix, checkSingularityOfAKK, is_symmetric_sparse, checkpositiveDefiniteness
 import matplotlib.pyplot as plt
