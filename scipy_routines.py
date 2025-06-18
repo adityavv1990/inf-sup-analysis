@@ -2,7 +2,7 @@
 """
 Created on Fri Sep 20 14:34:40 2024
 
-@author: Ignacio Calvo Ramón-Borja
+@author: Aditya Vasudevan, modified code of Ignacio Calvo Ramón-Borja
 """
 
 # Este archivo contiene la función mixed_infsup
@@ -12,7 +12,7 @@ from scipy.linalg import sqrtm, matrix_balance
 from scipy.sparse import csc_matrix
 import time, math, sys
 from scipy.linalg import eigh, inv, eig
-
+import scipy.sparse as sp
 
 
 def is_positive_definite_sparse(matrix):
@@ -119,7 +119,7 @@ def evaluateNullSpaceOfMatrix(matX):
 
 
 
-def mixed_infsup(matB, matH, matA, matL):
+def mixed_infsup_scipy(matB, matH, matA, matL):
     """
     Calcula el valor de la constante inf-sup de la matriz B de una
     discretización dada. Lo hace a partir de la resolución del problema
@@ -206,7 +206,7 @@ def mixed_infsup(matB, matH, matA, matL):
     try:
         # Calculamos el menor autovalor
         delta = 1e-12
-        eigValues, _ = eigsh(A = operator, k = m-1, M = matL, which = 'SA', tol=1e-5)
+        eigValues, _ = eigsh(A = operator, k = 5, M = matL, which = 'SA', tol=1e-5, ncv = m*20, maxiter = m*100)
         eigValueMax, _ = eigsh(A = operator, k = 1, M = matL, which = 'LA', tol=1e-5)
 
         eigValues = np.append(eigValues, eigValueMax)
@@ -228,10 +228,10 @@ def mixed_infsup(matB, matH, matA, matL):
  
         return eigenValues
     
-
     except ArpackNoConvergence:
         
         return "Error de convergencia"
+    
     
  
 def mixed_infsup_C(matB, matH, matC):
