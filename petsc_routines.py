@@ -28,7 +28,7 @@ def scipy_to_petsc(mat):
     return petsc_mat
 
 
-def mixed_infsup_petsc(matB, matH, matA, matL):
+def mixed_infsup(matB, matH, matA, matL):
     """
     Computes the value of the inf-sup constant for the matrix B of a
     given discretization. It does so by solving the generalized eigenvalue

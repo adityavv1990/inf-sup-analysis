@@ -35,12 +35,24 @@ import numpy as np
 import time
 
 from lector_casos import lector_parametros, lector_unknowns, lector_matrices
-# from inf_sup import mixed_infsup, primal_infsup, mixed_infsup_C, primal_infsup_onKerB, mixed_infsup_C2, mixed_infsup_gamma
-from inf_sup import mixed_infsup
-# from inf_sup import mixed_infsup_stabilized_U, mixed_infsup_stabilized_P
-# from inf_sup import evaluateNullSpaceOfMatrix, checkSingularityOfAKK, is_symmetric_sparse, checkpositiveDefiniteness
 import matplotlib.pyplot as plt
 import subprocess
+
+
+from config import eigenSolver
+
+if eigenSolver == 'petsc':
+    from petsc_routines import mixed_infsup
+else:
+    from scipy_routines import mixed_infsup, mixed_infsup_C
+
+
+
+# from inf_sup import mixed_infsup, primal_infsup, mixed_infsup_C, primal_infsup_onKerB, mixed_infsup_C2, mixed_infsup_gamma
+from matrixRoutines import is_symmetric_sparse
+# from inf_sup import mixed_infsup_stabilized_U, mixed_infsup_stabilized_P
+# from inf_sup import evaluateNullSpaceOfMatrix, checkSingularityOfAKK, is_symmetric_sparse, checkpositiveDefiniteness
+
 
 
 
@@ -169,56 +181,56 @@ if (evalBetaFromH and readMatrices == 'mixed'):
 
 
  
-# if (evalBetaFromC and readMatrices == 'mixed'): 
+if (evalBetaFromC and readMatrices == 'mixed'): 
 
-#     t1 = time.time()
+    t1 = time.time()
     
-#     print("----------------------------------------------------------")
-#     print("Solving the eigenvalue problem: B.T C^{-1}B x = \lambda H X")
-#     print("----------------------------------------------------------")
-#     print("\n\n")
+    print("----------------------------------------------------------")
+    print("Solving the eigenvalue problem: B.T C^{-1}B x = \lambda H X")
+    print("----------------------------------------------------------")
+    print("\n\n")
 
-#     filenameMin = ruta + "beta_h_mineig_fromC.txt"
-#     filenameMax = ruta + "beta_h_maxeig_fromC.txt"
+    filenameMin = ruta + "beta_h_mineig_fromC.txt"
+    filenameMax = ruta + "beta_h_maxeig_fromC.txt"
     
-#     open(filenameMin, "w").close()
-#     open(filenameMax, "w").close()
+    open(filenameMin, "w").close()
+    open(filenameMax, "w").close()
             
-#     count = 0
+    count = 0
     
-#     for A, B, C, H, L in zip(matsA, matsB, matsC, matsH, matsL):
+    for A, B, C, H, L in zip(matsA, matsB, matsC, matsH, matsL):
         
-#         print("----------")
-#         print(" N = ", casos[count],flush=True)
-#         print("----------")
+        print("----------")
+        print(" N = ", casos[count],flush=True)
+        print("----------")
 
-#         if (checkSymmetryOfMatrix):
-#             flag = is_symmetric_sparse(C)
-#             print("The matrix C is symmetric!" if flag else "The matrix C is unsymmetric!", flush=True)
+        if (checkSymmetryOfMatrix):
+            flag = is_symmetric_sparse(C)
+            print("The matrix C is symmetric!" if flag else "The matrix C is unsymmetric!", flush=True)
         
-#         eigenValuesFromC = mixed_infsup_C(B, H, C)
-#         minEigenValue = eigenValuesFromC[0]
-#         maxEigenValue = eigenValuesFromC[1]
-#         print("Maximum EigenValue = ", maxEigenValue, flush=True)
-#         print("Minimum EigenValue = ", minEigenValue, flush=True)
-#         print("\n\n")
+        eigenValuesFromC = mixed_infsup_C(B, H, C)
+        minEigenValue = eigenValuesFromC[0]
+        maxEigenValue = eigenValuesFromC[1]
+        print("Maximum EigenValue = ", maxEigenValue, flush=True)
+        print("Minimum EigenValue = ", minEigenValue, flush=True)
+        print("\n\n")
 
-#         N = casos[count]
-#         with open(filenameMin, 'a') as f:
-#             f.write(f"{float(N[0])} {minEigenValue}\n")
-#             f.flush()
-#         with open(filenameMax, 'a') as f:
-#             f.write(f"{float(N[0])} {maxEigenValue}\n")
-#             f.flush()
+        N = casos[count]
+        with open(filenameMin, 'a') as f:
+            f.write(f"{float(N[0])} {minEigenValue}\n")
+            f.flush()
+        with open(filenameMax, 'a') as f:
+            f.write(f"{float(N[0])} {maxEigenValue}\n")
+            f.flush()
 
-#         count += 1
+        count += 1
 
-#     t2 = time.time()
-#     elapsed_time = t2-t1
-#     print("----------------------------------------------------------------------")
-#     print(f"Time to solve  B.T C^{-1}B x = \lambda H x : {elapsed_time:.6f} seconds", flush=True)
-#     print("----------------------------------------------------------------------")
-#     print("\n\n")
+    t2 = time.time()
+    elapsed_time = t2-t1
+    print("----------------------------------------------------------------------")
+    print(f"Time to solve  B.T C^{-1}B x = \lambda H x : {elapsed_time:.6f} seconds", flush=True)
+    print("----------------------------------------------------------------------")
+    print("\n\n")
     
 
 

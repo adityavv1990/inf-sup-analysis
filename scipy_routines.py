@@ -29,14 +29,6 @@ def is_positive_definite_sparse(matrix):
         return False
 
 
-
-def is_symmetric_sparse(matrix):
-    if not isinstance(matrix, csc_matrix):
-        matrix = csc_matrix(matrix)
-    return (matrix != matrix.T).nnz == 0
-
-
-
 def checkpositiveDefiniteness(matM, matH):
     
     if (is_positive_definite_sparse(matM)):
@@ -119,7 +111,7 @@ def evaluateNullSpaceOfMatrix(matX):
 
 
 
-def mixed_infsup_scipy(matB, matH, matA, matL):
+def mixed_infsup(matB, matH, matA, matL):
     """
     Calcula el valor de la constante inf-sup de la matriz B de una
     discretización dada. Lo hace a partir de la resolución del problema
