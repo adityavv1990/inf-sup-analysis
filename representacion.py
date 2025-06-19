@@ -39,10 +39,10 @@ import matplotlib.pyplot as plt
 import subprocess
 
 
-from config import eigenSolver
+from config import eigenSolver, formulation
 
 if eigenSolver == 'petsc':
-    from petsc_routines import mixed_infsup
+    from petsc_routines import mixed_infsup, mixed_infsup_C
 else:
     from scipy_routines import mixed_infsup, mixed_infsup_C
 
@@ -59,8 +59,8 @@ from matrixRoutines import is_symmetric_sparse
 #################################################################
 # Set flags for the evaluation of different eigenvalue problems
 
-evalBetaFromH = True
-evalBetaFromC = False
+evalBetaFromH = False
+evalBetaFromC = True
 evalBetaFromC2 = False
 evalBetaStabilizedU = False
 evalBetaStabilizedP = False
@@ -72,10 +72,6 @@ evalSingularityOfAKK = False
 checkSymmetryOfMatrix = False
 checkPostiveDefiniteness = False
 
-readMatrices = 'mixed'
-#readMatrices = 'standard'
-if readMatrices not in ['mixed', 'standard']:
-    raise ValueError("readMatrices must be either 'mixed' or 'standard'")
 #################################################################
 
 print("evalBetafromH            is      : ", evalBetaFromH)
@@ -90,7 +86,8 @@ print("evalNullSpaceBt          is      : ", evalNullSpaceBt)
 print("evalSingularityOfAKK     is      : ", evalSingularityOfAKK)
 print("checkSymmetryOfMatrix    is      : ", checkSymmetryOfMatrix)
 print("checkPostiveDefiniteness is      : ", checkPostiveDefiniteness)
-print("reading matrices for forumlation : ", readMatrices)
+print("reading matrices for forumlation : ", formulation)
+print("eigenSolver              is      : ", eigenSolver)
 
 #################################################################
 
@@ -102,7 +99,7 @@ sys.path.append(os.path.join(ruta_principal))
 
 
 # Ruta donde se encuentran los problemas varios
-ruta = os.path.join(ruta_principal, "3D_stokes/p2p1/pspg/tau-0.1/")
+ruta = os.path.join(ruta_principal, "3D_stokes/p2p1/stabilized/eps-1e-5/")
 
 print("Reading from the directory:           ", ruta)
 
@@ -115,7 +112,7 @@ print("Number of equations: ", num_ecs)
 print("\n\n")
 
 # Lectura las matrices (formulacion mixed)
-if readMatrices == 'mixed':
+if formulation == 'mixed':
     As, Bs, Cs, Hs, Ls = lector_matrices('mixed', ruta_carpetas = ruta)
     # Pasamos las matrices a formato lista
     matsB = [mat for mat in Bs.values()]
@@ -123,7 +120,7 @@ if readMatrices == 'mixed':
     matsL = [mat for mat in Ls.values()]
     matsC = [mat for mat in Cs.values()]
     matsA = [mat for mat in As.values()]
-elif readMatrices == 'standard':
+elif formulation == 'standard':
     Ms, Hs = lector_matrices('standard', ruta_carpetas = ruta)
     matsA = [mat for mat in Ms.values()]
     matsH = [mat for mat in Hs.values()]
@@ -131,7 +128,7 @@ elif readMatrices == 'standard':
 
 
 
-if (evalBetaFromH and readMatrices == 'mixed'):
+if (evalBetaFromH and formulation == 'mixed'):
 
     t1 = time.time()
         
@@ -181,7 +178,7 @@ if (evalBetaFromH and readMatrices == 'mixed'):
 
 
  
-if (evalBetaFromC and readMatrices == 'mixed'): 
+if (evalBetaFromC and formulation == 'mixed'): 
 
     t1 = time.time()
     

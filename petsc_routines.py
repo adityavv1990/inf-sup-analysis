@@ -12,6 +12,7 @@ from slepc4py import SLEPc
 
 import numpy as np
 from scipy.sparse import csc_matrix
+from scipy.sparse.linalg import norm
 import scipy.sparse as sp
 import time, math, sys
 
@@ -28,13 +29,15 @@ def scipy_to_petsc(mat):
     return petsc_mat
 
 
+
+
 def mixed_infsup(matB, matH, matA, matL):
     """
     Computes the value of the inf-sup constant for the matrix B of a
     given discretization. It does so by solving the generalized eigenvalue
     problem B * H^(-1) * B^T * x = lambda * L * x.
 
-    The eigensolver user here is from the PETSc library. 
+    The eigensolver used here is from the PETSc library. 
 
     Parameters
     ----------
@@ -52,8 +55,9 @@ def mixed_infsup(matB, matH, matA, matL):
     Returns
     -------
     float
-        The square root of the smallest eigenvalue of the generalized
-        eigenvalue problem B * H^(-1) * B^T * x = lambda * L * x.
+        The smallest eigenvalue of the generalized
+        eigenvalue problem B * H^(-1) * B^T * x = lambda * L * x. It's
+        square root is the inf-sup constant.
 
         If the computation does not converge, returns a convergence error
         message ('Error de convergencia').
@@ -110,7 +114,12 @@ def mixed_infsup(matB, matH, matA, matL):
     E.setDimensions(nev=m)
     E.setFromOptions()
     E.solve()
-
+    
+    # check convergence
+    if E.getConverged() <= 0 or E.getConvergedReason() < 0:
+        print("ERROR: Eigensolver did not converged", flush=True)
+        sys.exit(1)
+    
     # Output results
     nconv = E.getConverged()
     print(f"Number of converged eigenpairs: {nconv}")
@@ -132,3 +141,139 @@ def mixed_infsup(matB, matH, matA, matL):
     print(f"Elapsed time in computing eigenvalues of B Hinv B.T {elapsed_time:.6f} seconds", flush=True)
 
     return np.array([minValue, maxValue])
+
+
+
+
+def mixed_infsup_C(matB, matH, matC):
+    """
+    Computes the value of the inf-sup constant for the matrix B of a
+    given discretization. It does so by solving the generalized eigenvalue
+    problem B.T * C^(-1) * B * x = lambda * H * x.
+    
+    ***
+    Eq. 13 in D. Chapelle and K. J. Bathe, The inf-sup test,
+    Computers and Structures, Vol. 47, No. 4/5, pp. 537-545. 1993
+    ****
+    
+    The eigensolver used here is from the PETSc library. 
+
+    Parameters
+    ----------
+    matB : scipy.sparse matrix
+        Matrix associated with the bilinear form B. Dimensions (m, n)
+    matH : scipy.sparse matrix
+        Primal norm matrix. It is symmetric and positive definite, with
+        dimensions (n, n)
+    matC : scipy.sparse matrix
+        Matrix associated with the bilinear form C. Dimensions (n, n)
+
+    Returns
+    -------
+    float
+        The smallest eigenvalue of the generalized
+        eigenvalue problem B * H^(-1) * B^T * x = lambda * L * x. It's 
+        square root is the inf-sup constant.
+
+        If the computation does not converge, returns a convergence error
+        message ('Error de convergencia').
+    """
+
+    start_time = time.time()
+    
+    matB = matB.astype(np.float64)
+    matH = matH.astype(np.float64)
+    matC = matC.astype(np.float64)
+
+    scale_C = norm(matC)
+    matC = matC / scale_C  # Normalize C to avoid numerical issues
+
+    m,n = matB.shape
+    print("The shape of B = ", matB.shape, flush=True)
+    print("The shape of H = ", matH.shape, flush=True)
+    print("The shape of C = ", matC.shape, flush=True)
+
+    B = scipy_to_petsc(matB)
+    H = scipy_to_petsc(matH)
+    C = scipy_to_petsc(matC)
+
+    # Create KSP (linear solver) for C
+    ksp = PETSc.KSP().create()
+    ksp.setOperators(-C)
+    ksp.setType('preonly')  # Direct solve
+    ksp.getPC().setType('lu')  # LU factorization
+    ksp.setFromOptions()
+    # ksp.setType('cg')  # Or 'gmres' if C is not symmetric positive definite
+    # pc = ksp.getPC()
+    # pc.setType('hypre')  # Or 'ilu' if available
+    # ksp.setTolerances(rtol=1e-5)
+    # ksp.setFromOptions()
+
+    # Define shell matrix A = B.T C^{-1} B
+    def mult_C(shell_mat, x, y):
+        # Step 1: z = B^T x
+        # z = PETSc.Vec().createSeq(m)
+        # B.mult(x, z)
+
+        # # Step 2: solve H y = z → y_temp
+        # y_temp = PETSc.Vec().createSeq(m)
+        # ksp.solve(z, y_temp)
+
+        # # Step 3: y = B y_temp
+        # B.multTranspose(y_temp, y)
+        y.set(0.0)
+        xtemp = B.getVecLeft()
+        B.mult(x, xtemp)         # xtemp = B * x
+
+        ytemp = C.getVecLeft()
+        ksp.solve(xtemp, ytemp)  # ytemp = (−C)^−1 * B * x
+        B.multTranspose(ytemp, y)  # y = B^T * (−C)^−1 * B * x
+
+    # Create MatShell for A
+    A_shell = PETSc.Mat().createPython([n, n], comm=PETSc.COMM_WORLD)
+    A_shell.setPythonContext(type('ShellContext', (), {'mult': mult_C}))
+    A_shell.setUp()
+
+    # Solve generalized eigenproblem A x = lambda L x
+    E = SLEPc.EPS().create()
+    E.setOperators(A_shell, H)
+    E.setProblemType(SLEPc.EPS.ProblemType.GHEP)
+    E.setType(SLEPc.EPS.Type.KRYLOVSCHUR)      # Default eigensolver type
+    E.setWhichEigenpairs(SLEPc.EPS.Which.SMALLEST_REAL)  # Get smallest real part
+    E.setDimensions(nev=n)
+    E.setFromOptions()
+    E.setTolerances(tol=1e-8)
+    E.solve()
+    
+    # check convergence
+    if E.getConverged() <= 0 or E.getConvergedReason() < 0:
+        print("ERROR: Eigensolver did not converged", flush=True)
+        sys.exit(1)
+    
+    # Output results
+    nconv = E.getConverged()
+    print(f"Number of converged eigenpairs: {nconv}")
+    xr, xi = A_shell.getVecs()
+
+    minValue = 1e20
+    maxValue = -1e20
+
+    for i in range(nconv):
+        eigval = E.getEigenpair(i, xr, xi)
+        eigval = eigval / scale_C  # Rescale eigenvalue
+        print(f"Eigenvalue {i}: {eigval.real} + {eigval.imag}j")
+        if (abs(eigval.real) < minValue and abs(eigval.real) > 1e-4):
+            minValue = eigval.real
+        if eigval.real > maxValue:
+            maxValue = eigval.real
+
+    end_time = time.time()
+    elapsed_time = end_time - start_time
+    print(f"Elapsed time in computing eigenvalues of B Hinv B.T {elapsed_time:.6f} seconds", flush=True)
+
+    return np.array([minValue, maxValue])
+
+
+
+
+
