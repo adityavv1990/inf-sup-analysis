@@ -404,7 +404,7 @@ def mixed_infsup_stabilized_U(matA, matB, matC, matH):
         eigValuesMax, _ = eigsh(A = operator, k = 1, M = matH, which = 'LM', tol = 1e-9)
         
         eigValues = np.append(eigValues, eigValuesMax)
-        eigValues = eigValues - 1.0
+        #eigValues = eigValues - 1.0
 
         rank = (abs(eigValues) > 1e-5).sum()
 

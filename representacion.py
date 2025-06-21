@@ -42,9 +42,9 @@ import subprocess
 from config import eigenSolver, formulation
 
 if eigenSolver == 'petsc':
-    from petsc_routines import mixed_infsup, mixed_infsup_C
+    from petsc_routines import mixed_infsup, mixed_infsup_C, mixed_infsup_stabilized_U, mixed_infsup_stabilized_P
 else:
-    from scipy_routines import mixed_infsup, mixed_infsup_C
+    from scipy_routines import mixed_infsup, mixed_infsup_C, mixed_infsup_stabilized_U, mixed_infsup_stabilized_P
 
 
 
@@ -60,7 +60,7 @@ from matrixRoutines import is_symmetric_sparse
 # Set flags for the evaluation of different eigenvalue problems
 
 evalBetaFromH = False
-evalBetaFromC = True
+evalBetaFromC = False
 evalBetaFromC2 = False
 evalBetaStabilizedU = False
 evalBetaStabilizedP = False
@@ -99,7 +99,7 @@ sys.path.append(os.path.join(ruta_principal))
 
 
 # Ruta donde se encuentran los problemas varios
-ruta = os.path.join(ruta_principal, "3D_stokes/p2p1/stabilized/eps-1e-5/")
+ruta = os.path.join(ruta_principal, "3D_stokes/p2p1/stabilized/eps-1e-5/scipy/")
 
 print("Reading from the directory:           ", ruta)
 
@@ -232,110 +232,110 @@ if (evalBetaFromC and formulation == 'mixed'):
 
 
 
-# if (evalBetaStabilizedU and readMatrices == 'mixed'): 
+if (evalBetaStabilizedU and formulation == 'mixed'): 
 
-#     t1 = time.time()
+    t1 = time.time()
     
-#     print("----------------------------------------------------------")
-#     print("Solving the eigenvalue problem: (A + B.T C^{-1}B ) x = \lambda H X")
-#     print("----------------------------------------------------------")
-#     print("\n\n")
+    print("----------------------------------------------------------")
+    print("Solving the eigenvalue problem: (A + B.T C^{-1}B ) x = \lambda H X")
+    print("----------------------------------------------------------")
+    print("\n\n")
 
-#     filenameMin = ruta + "beta_h_mineig_fromCStabU.txt"
-#     filenameMax = ruta + "beta_h_maxeig_fromCStabU.txt"
+    filenameMin = ruta + "beta_h_mineig_fromCStabU.txt"
+    filenameMax = ruta + "beta_h_maxeig_fromCStabU.txt"
     
-#     open(filenameMin, "w").close()
-#     open(filenameMax, "w").close()
+    open(filenameMin, "w").close()
+    open(filenameMax, "w").close()
             
-#     count = 0
+    count = 0
     
-#     for A, B, C, H, L in zip(matsA, matsB, matsC, matsH, matsL):
+    for A, B, C, H, L in zip(matsA, matsB, matsC, matsH, matsL):
         
-#         print("----------")
-#         print(" N = ", casos[count],flush=True)
-#         print("----------")
+        print("----------")
+        print(" N = ", casos[count],flush=True)
+        print("----------")
 
-#         if (checkSymmetryOfMatrix):
-#             flag = is_symmetric_sparse(C)
-#             print("The matrix C is symmetric!" if flag else "The matrix C is unsymmetric!", flush=True)
+        if (checkSymmetryOfMatrix):
+            flag = is_symmetric_sparse(C)
+            print("The matrix C is symmetric!" if flag else "The matrix C is unsymmetric!", flush=True)
         
-#         eigenValuesFromC = mixed_infsup_stabilized_U(A, B, C, H)
-#         minEigenValue = eigenValuesFromC[0]
-#         maxEigenValue = eigenValuesFromC[1]
-#         print("Maximum EigenValue = ", maxEigenValue, flush=True)
-#         print("Minimum EigenValue = ", minEigenValue, flush=True)
-#         print("\n\n")
+        eigenValuesFromC = mixed_infsup_stabilized_U(A, B, C, H)
+        minEigenValue = eigenValuesFromC[0]
+        maxEigenValue = eigenValuesFromC[1]
+        print("Maximum EigenValue = ", maxEigenValue, flush=True)
+        print("Minimum EigenValue = ", minEigenValue, flush=True)
+        print("\n\n")
 
-#         N = casos[count]
-#         with open(filenameMin, 'a') as f:
-#             f.write(f"{float(N[0])} {minEigenValue}\n")
-#             f.flush()
-#         with open(filenameMax, 'a') as f:
-#             f.write(f"{float(N[0])} {maxEigenValue}\n")
-#             f.flush()
+        N = casos[count]
+        with open(filenameMin, 'a') as f:
+            f.write(f"{float(N[0])} {minEigenValue}\n")
+            f.flush()
+        with open(filenameMax, 'a') as f:
+            f.write(f"{float(N[0])} {maxEigenValue}\n")
+            f.flush()
 
-#         count += 1
+        count += 1
 
-#     t2 = time.time()
-#     elapsed_time = t2-t1
-#     print("----------------------------------------------------------------------")
-#     print(f"Time to solve (A + B.T C^{-1}B ) x = \lambda H x : {elapsed_time:.6f} seconds", flush=True)
-#     print("----------------------------------------------------------------------")
-#     print("\n\n")
+    t2 = time.time()
+    elapsed_time = t2-t1
+    print("----------------------------------------------------------------------")
+    print(f"Time to solve (A + B.T C^{-1}B ) x = \lambda H x : {elapsed_time:.6f} seconds", flush=True)
+    print("----------------------------------------------------------------------")
+    print("\n\n")
     
 
 
 
-# if (evalBetaStabilizedP and readMatrices == 'mixed'): 
+if (evalBetaStabilizedP and formulation == 'mixed'): 
 
-#     t1 = time.time()
+    t1 = time.time()
     
-#     print("----------------------------------------------------------")
-#     print("Solving the eigenvalue problem: (B A^{-1} B^T + C)x = \lambda L X")
-#     print("----------------------------------------------------------")
-#     print("\n\n")
+    print("----------------------------------------------------------")
+    print("Solving the eigenvalue problem: (B A^{-1} B^T + C)x = \lambda L X")
+    print("----------------------------------------------------------")
+    print("\n\n")
 
-#     filenameMin = ruta + "beta_h_mineig_fromCStabP.txt"
-#     filenameMax = ruta + "beta_h_maxeig_fromCStabP.txt"
+    filenameMin = ruta + "beta_h_mineig_fromCStabP.txt"
+    filenameMax = ruta + "beta_h_maxeig_fromCStabP.txt"
     
-#     open(filenameMin, "w").close()
-#     open(filenameMax, "w").close()
+    open(filenameMin, "w").close()
+    open(filenameMax, "w").close()
             
-#     count = 0
+    count = 0
     
-#     for A, B, C, H, L in zip(matsA, matsB, matsC, matsH, matsL):
+    for A, B, C, H, L in zip(matsA, matsB, matsC, matsH, matsL):
         
-#         print("----------")
-#         print(" N = ", casos[count],flush=True)
-#         print("----------")
+        print("----------")
+        print(" N = ", casos[count],flush=True)
+        print("----------")
 
-#         if (checkSymmetryOfMatrix):
-#             flag = is_symmetric_sparse(C)
-#             print("The matrix C is symmetric!" if flag else "The matrix C is unsymmetric!", flush=True)
+        if (checkSymmetryOfMatrix):
+            flag = is_symmetric_sparse(C)
+            print("The matrix C is symmetric!" if flag else "The matrix C is unsymmetric!", flush=True)
         
-#         eigenValuesFromC = mixed_infsup_stabilized_P(A, B, C, L)
-#         minEigenValue = eigenValuesFromC[0]
-#         maxEigenValue = eigenValuesFromC[1]
-#         print("Maximum EigenValue = ", maxEigenValue, flush=True)
-#         print("Minimum EigenValue = ", minEigenValue, flush=True)
-#         print("\n\n")
+        eigenValuesFromC = mixed_infsup_stabilized_P(A, B, C, L)
+        minEigenValue = eigenValuesFromC[0]
+        maxEigenValue = eigenValuesFromC[1]
+        print("Maximum EigenValue = ", maxEigenValue, flush=True)
+        print("Minimum EigenValue = ", minEigenValue, flush=True)
+        print("\n\n")
 
-#         N = casos[count]
-#         with open(filenameMin, 'a') as f:
-#             f.write(f"{float(N[0])} {minEigenValue}\n")
-#             f.flush()
-#         with open(filenameMax, 'a') as f:
-#             f.write(f"{float(N[0])} {maxEigenValue}\n")
-#             f.flush()
+        N = casos[count]
+        with open(filenameMin, 'a') as f:
+            f.write(f"{float(N[0])} {minEigenValue}\n")
+            f.flush()
+        with open(filenameMax, 'a') as f:
+            f.write(f"{float(N[0])} {maxEigenValue}\n")
+            f.flush()
 
-#         count += 1
+        count += 1
 
-#     t2 = time.time()
-#     elapsed_time = t2-t1
-#     print("----------------------------------------------------------------------")
-#     print(f"Time to solve  (B A^{-1} B^T + C) x = \lambda L x : {elapsed_time:.6f} seconds", flush=True)
-#     print("----------------------------------------------------------------------")
-#     print("\n\n")
+    t2 = time.time()
+    elapsed_time = t2-t1
+    print("----------------------------------------------------------------------")
+    print(f"Time to solve  (B A^{-1} B^T + C) x = \lambda L x : {elapsed_time:.6f} seconds", flush=True)
+    print("----------------------------------------------------------------------")
+    print("\n\n")
 
 
 
@@ -689,5 +689,5 @@ print(f"Total time of execution: {elapsed_time:.6f} seconds", flush=True)
 print("----------------------------------------------------------")
 print("\n\n")
 
-# command = "cp output.txt " + ruta
-# result = subprocess.run(command, shell=True, text=True, capture_output=True)
+command = "cp output.txt " + ruta
+result = subprocess.run(command, shell=True, text=True, capture_output=True)
